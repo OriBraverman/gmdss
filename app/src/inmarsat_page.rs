@@ -99,9 +99,10 @@ impl Inmarsat {
     pub fn show_a(&mut self, ui: &mut egui::Ui, clock: &SimClock, ship: &Ship, ces: &CesList, subs: &mut Vec<Subscriber>) {
         let t = clock.now();
         let mut env = Env { now: clock.secs(), date: (t.day, t.month, t.year, t.hour, t.minute), lat: f64::from(ship.lat_min) / 60.0, lon: f64::from(ship.lon_min) / 60.0, ces, subscribers: subs };
-        // VDU
-        egui::Frame::new().fill(Color32::from_rgb(10, 14, 10)).inner_margin(10).corner_radius(4).show(ui, |ui| {
-            ui.set_width(700.0);
+        // VDU in its beige cabinet (as the key strip below; 720 wide in all).
+        let cabinet = egui::Frame::new().fill(Color32::from_rgb(216, 210, 172)).stroke(egui::Stroke::new(1.0, Color32::from_rgb(90, 88, 70))).inner_margin(12).corner_radius(3);
+        cabinet.show(ui, |ui| egui::Frame::new().fill(Color32::from_rgb(10, 14, 10)).stroke(egui::Stroke::new(2.0, Color32::from_rgb(70, 74, 62))).inner_margin(10).corner_radius(4).show(ui, |ui| {
+            ui.set_width(720.0 - 2.0 * 12.0 - 2.0 * 10.0 - 4.0);
             ui.set_height(300.0);
             let status = if !self.ses.on { "POWER OFF".into() } else if self.ses.online() { "ON LINE".into() } else { format!("IDLE   {}  CES {}  {}", self.ses.setup.region.header(), self.ses.setup.ces_id, if self.ses.setup.priority == Priority::Distress { "DISTRESS" } else { "ROUTINE" }) };
             ui.label(RichText::new(format!("JUE-45 INMARSAT-A SES   {status}")).monospace().color(Color32::BLACK).background_color(Color32::from_rgb(150, 200, 150)));
@@ -112,7 +113,7 @@ impl Inmarsat {
                 }
                 ui.label(RichText::new(s).monospace().size(13.0).color(Color32::from_rgb(140, 230, 140)));
             });
-        });
+        }));
         // Keyboard to the line.
         if self.ses.on && !self.setup_open {
             for e in ui.input(|i| i.events.clone()) {
