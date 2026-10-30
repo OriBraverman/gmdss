@@ -1,0 +1,85 @@
+MF DSC distress alert on 2187.5 kHz
+
+duration 300
+
+task 5 0 0
+Task 1: Switch on the RE2100 transceiver and the MF/HF DSC controller.
+The DSC controller transmits through the RE2100.
+_text_end
+
+move_and_press HF
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press HF.VOL
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+move_and_press HF_DSC.VOL_OFF
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 6 0 0
+Task 2: Send an undesignated distress alert on 2187.5 kHz.
+_text_end
+
+msg 5 0 0
+Press DISTRESS. Keep the nature undesignated: NEXT.
+_text_end
+
+move_and_press HF_DSC.DISTRESS
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+move_and_press HF_DSC.NEXT
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+msg 5 0 0
+Accept the position with NEXT. The distress frequency 2187.5 kHz is offered: NEXT.
+_text_end
+
+move_and_press HF_DSC.NEXT
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+move_and_press HF_DSC.NEXT
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+msg 6 0 0
+Press DISTRESS and SEND together (here: SEND within 3 seconds of DISTRESS).
+_text_end
+
+move_and_press HF_DSC.DISTRESS+HF_DSC.SEND
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 6 0 0
+Task 3: Wait for the acknowledgement and silence the alarm.
+_text_end
+
+msg 6 0 0
+The alert repeats until a coast station acknowledges it (use the 10x clock if you like).
+_text_end
+
+delay 0 0 60
+
+msg 5 0 0
+Acknowledged: press STOP/ENT. The RE2100 is now on 2182 kHz for the distress traffic.
+_text_end
+
+move_and_press HF_DSC.STOP_ENT
+delay 0 0 0.3
+release
+delay 0 0 1
+
+exit

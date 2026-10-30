@@ -1,0 +1,41 @@
+Testing the 2182 kHz watch receiver
+
+duration 120
+
+task 5 0 0
+Task 1: Switch on the R501 watch receiver.
+_text_end
+
+move_and_press R_501
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 5 0 0
+Click the middle of the AF GAIN knob: the receiver switches on.
+_text_end
+
+move_and_press R_501.AF_GAIN
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 5 0 0
+Task 2: Test the alarm: hold TEST - the loudspeaker sounds the two-tone signal.
+_text_end
+
+move_and_press R_501.TEST
+delay 0 0 3
+release
+delay 0 0 1
+
+task 5 0 0
+Task 3: Mute the loudspeaker. A received alarm signal opens it again.
+_text_end
+
+move_and_press R_501.MUTE_ON
+delay 0 0 0.3
+release
+delay 0 0 1
+
+exit

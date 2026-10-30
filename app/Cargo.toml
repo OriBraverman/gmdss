@@ -1,0 +1,10 @@
+[package]
+name = "gmdss-app"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+eframe = { version = "0.36.2", default-features = false, features = ["default_fonts", "glow"] }
+gmdss = { version = "0.1.0", path = ".." }
+resvg = { version = "0.45", default-features = false, features = ["text"] }
+rodio = { version = "0.20", default-features = false }

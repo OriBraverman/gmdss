@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 2182 kHz watchkeeping receiver R501. Own drawing on the original's 466 x 304 layout.
+     Ids the app uses: lamp-1 (power) lamp-2 (muted) lamp-3 (loudspeaker), knob-AF_GAIN,
+     btn-MISS_SILENCE_PERIOD btn-CLOCK_RESET btn-TEST btn-MUTE_OFF btn-MUTE_ON.
+     Text uses DejaVu Sans (bundled, see ../fonts). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="466" height="304" viewBox="0 0 466 304"
+     font-family="DejaVu Sans">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#93b68f"/>
+      <stop offset="1" stop-color="#7c9f78"/>
+    </linearGradient>
+    <radialGradient id="screw" cx="0.35" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#e3e3e3"/>
+      <stop offset="1" stop-color="#9a9a9a"/>
+    </radialGradient>
+    <linearGradient id="rod" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#717171"/>
+      <stop offset="0.3" stop-color="#ffffff"/>
+      <stop offset="0.6" stop-color="#e3e3e3"/>
+      <stop offset="1" stop-color="#717171"/>
+    </linearGradient>
+    <radialGradient id="knob" cx="0.38" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#4a4a4a"/>
+      <stop offset="0.55" stop-color="#151515"/>
+      <stop offset="1" stop-color="#000"/>
+    </radialGradient>
+    <radialGradient id="hole" cx="0.5" cy="0.4" r="0.6">
+      <stop offset="0" stop-color="#2a2a2a"/>
+      <stop offset="1" stop-color="#000"/>
+    </radialGradient>
+    <g id="screwHead">
+      <circle r="8.5" fill="#597d61"/>
+      <circle r="7.2" fill="#717171"/>
+      <circle r="6.2" fill="url(#screw)"/>
+      <path d="M-3.4,-0.9 L3.4,0.9 M-0.9,3.4 L0.9,-3.4" stroke="#000" stroke-width="1.1" stroke-linecap="round"/>
+    </g>
+    <!-- Round push button in a light collar. -->
+    <g id="button">
+      <circle r="11" fill="#597d61"/>
+      <circle cx="0.6" cy="0.8" r="10" fill="#e3f3e3"/>
+      <circle r="9" fill="url(#knob)"/>
+      <ellipse cx="-1.5" cy="-4" rx="3.5" ry="2" fill="#414141"/>
+    </g>
+    <g id="lampHole">
+      <circle r="8.5" fill="#597d61"/>
+      <circle cx="0.6" cy="0.8" r="8" fill="#e3f3e3"/>
+      <circle r="7.5" fill="url(#hole)"/>
+    </g>
+    <g id="grilleSlot">
+      <rect x="-1" y="-1" width="10" height="83" rx="3" fill="#597d61"/>
+      <rect x="0" y="0" width="10" height="83" rx="3" fill="#a6c7a2"/>
+      <rect x="0" y="0" width="8" height="81" rx="3" fill="#000"/>
+    </g>
+  </defs>
+
+  <!-- Frame and face. -->
+  <rect x="0" y="0" width="466" height="304" rx="7" fill="#000"/>
+  <rect x="2" y="2" width="462" height="300" rx="6" fill="none" stroke="#717171" stroke-width="1"/>
+  <rect x="4" y="4" width="458" height="296" rx="5" fill="url(#face)"/>
+  <path d="M9,5.5 H457" stroke="#e3f3e3" stroke-width="1.5"/>
+  <path d="M5.5,9 V295" stroke="#a6c7a2" stroke-width="1.5"/>
+  <path d="M9,298.5 H457 M460.5,9 V295" stroke="#597d61" stroke-width="1.5"/>
+
+  <use href="#screwHead" x="28" y="48"/>
+  <use href="#screwHead" x="438" y="48"/>
+  <use href="#screwHead" x="28" y="284"/>
+  <use href="#screwHead" x="438" y="284"/>
+
+  <!-- Carrying handles. -->
+  <rect x="20" y="66" width="15" height="176" rx="7" fill="#597d61"/>
+  <rect x="21" y="64" width="13" height="174" rx="6.5" fill="url(#rod)"/>
+  <rect x="431" y="66" width="15" height="176" rx="7" fill="#597d61"/>
+  <rect x="432" y="64" width="13" height="174" rx="6.5" fill="url(#rod)"/>
+
+  <!-- Title and type plate. -->
+  <text x="226" y="57" font-size="7.5" font-weight="bold" fill="#fff" text-anchor="middle">2182 kHz WATCHKEEPING RECEIVER</text>
+  <text x="217" y="71" font-size="6" fill="#fff" text-anchor="end">TYPE R501</text>
+  <rect x="220" y="62" width="57" height="13" rx="6.5" fill="#ebebf3"/>
+  <path d="M224,62.6 H273" stroke="#fff" stroke-width="1"/>
+  <path d="M224,74.4 H273" stroke="#414141" stroke-opacity="0.6" stroke-width="1"/>
+
+  <!-- Indicator lamps. -->
+  <use id="lamp-1" href="#lampHole" x="67" y="61"/>
+  <use id="lamp-2" href="#lampHole" x="106" y="61"/>
+  <use id="lamp-3" href="#lampHole" x="346" y="61"/>
+
+  <!-- AF gain knob with its volume wedge, OFF mark and label. -->
+  <path d="M88,107 Q110,93 132,98 L132,101 Q110,98 90,108 Z" fill="#fff"/>
+  <circle cx="108.5" cy="129.5" r="22.5" fill="#597d61"/>
+  <circle cx="108" cy="128.5" r="21" fill="#e3e3e3"/>
+  <circle cx="108" cy="128.5" r="19" fill="#717171"/>
+  <circle id="knob-AF_GAIN" cx="107.5" cy="128.5" r="17" fill="url(#knob)"/>
+  <circle cx="107.5" cy="128.5" r="12" fill="none" stroke="#2a2a2a" stroke-width="1"/>
+  <circle cx="87.5" cy="145.5" r="2.2" fill="#fff"/>
+  <text x="83" y="148" font-size="6" fill="#fff" text-anchor="end">OFF</text>
+  <text x="107.5" y="164" font-size="6" fill="#fff" text-anchor="middle">AF GAIN</text>
+
+  <!-- Loudspeaker grille. -->
+  <use href="#grilleSlot" x="271" y="118"/>
+  <use href="#grilleSlot" x="289" y="118"/>
+  <use href="#grilleSlot" x="307" y="118"/>
+  <use href="#grilleSlot" x="325" y="118"/>
+  <use href="#grilleSlot" x="343" y="118"/>
+  <use href="#grilleSlot" x="361" y="118"/>
+  <use href="#grilleSlot" x="379" y="118"/>
+  <use href="#grilleSlot" x="397" y="118"/>
+
+  <!-- Push buttons and their labels. -->
+  <use id="btn-MISS_SILENCE_PERIOD" href="#button" x="71" y="196"/>
+  <use id="btn-CLOCK_RESET" href="#button" x="107" y="196"/>
+  <use id="btn-TEST" href="#button" x="143" y="196"/>
+  <use id="btn-MUTE_OFF" href="#button" x="179" y="196"/>
+  <use id="btn-MUTE_ON" href="#button" x="214" y="196"/>
+  <g font-size="5.5" fill="#fff" text-anchor="middle">
+    <text x="71" y="216">MISS</text>
+    <text x="71" y="223">SILENCE</text>
+    <text x="71" y="230">PERIOD</text>
+    <text x="107" y="216">CLOCK</text>
+    <text x="107" y="223">RESET</text>
+    <text x="143" y="216">TEST</text>
+    <text x="179" y="216">OFF</text>
+    <text x="214" y="216">ON</text>
+    <text x="196.5" y="230">MUTE</text>
+  </g>
+  <path d="M176,219.5 V221.5 H217 V219.5 M196.5,221.5 V224" fill="none" stroke="#fff" stroke-width="0.8"/>
+</svg>

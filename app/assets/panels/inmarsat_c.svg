@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Inmarsat-C transceiver H2095B front. Own drawing on the original's 317 x 133 layout.
+     Ids the app uses: key-ON_OFF key-SET key-ALARM, lamp-POWER lamp-LOGIN lamp-SEND lamp-MAIL lamp-ALARM.
+     Text uses DejaVu Sans (bundled, see ../fonts). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="317" height="133" viewBox="0 0 317 133" font-family="DejaVu Sans">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff04a"/>
+      <stop offset="1" stop-color="#f2d800"/>
+    </linearGradient>
+    <linearGradient id="key" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#9a9a9a"/>
+      <stop offset="1" stop-color="#5e5e5e"/>
+    </linearGradient>
+    <g id="oval">
+      <rect x="0.8" y="1.4" width="23" height="13" rx="6.5" fill="#000" fill-opacity="0.35"/>
+      <rect x="0" y="0" width="23" height="13" rx="6.5" fill="#000"/>
+      <rect x="1.5" y="1.5" width="20" height="10" rx="5" fill="url(#key)"/>
+      <rect x="4" y="2.5" width="15" height="3" rx="1.5" fill="#fff" fill-opacity="0.25"/>
+    </g>
+    <g id="led"><circle r="4.5" fill="#000"/><circle r="3.5" fill="#3a3a10"/></g>
+  </defs>
+  <rect x="0" y="0" width="317" height="133" rx="4" fill="url(#face)"/>
+  <rect x="0.5" y="0.5" width="316" height="132" rx="4" fill="none" stroke="#b8a400" stroke-width="1"/>
+
+  <!-- "Press both keys" bracket. -->
+  <rect x="134.5" y="11.5" width="74" height="40" rx="4" fill="none" stroke="#e3e3e3" stroke-width="2"/>
+  <path d="M108,61 V33 Q108,31 110,31 H134 M209,31 H232 Q234,31 234,33 V61" fill="none" stroke="#e3e3e3" stroke-width="2"/>
+  <g font-size="6.6" fill="#e3e3e3" text-anchor="middle">
+    <text x="171.5" y="22">Press both keys</text>
+    <text x="171.5" y="33.5">for 5 seconds</text>
+    <text x="171.5" y="45">to send alarm.</text>
+  </g>
+
+  <g font-size="6.8" fill="#e3e3e3" text-anchor="middle">
+    <text x="38.5" y="71">On/Off</text>
+    <text x="73.5" y="71">Power</text>
+    <text x="108.5" y="71">Set</text>
+    <text x="143.5" y="71">Login</text>
+    <text x="171.5" y="71">Send</text>
+    <text x="199.5" y="71">Mail</text>
+    <text x="234.5" y="71">Alarm</text>
+    <text x="269.5" y="71">Alarm</text>
+  </g>
+  <use id="key-ON_OFF" href="#oval" x="27" y="77"/>
+  <use id="key-SET" href="#oval" x="97" y="77"/>
+  <use id="key-ALARM" href="#oval" x="223" y="77"/>
+  <use id="lamp-POWER" href="#led" x="73.5" y="83.5"/>
+  <use id="lamp-LOGIN" href="#led" x="143.5" y="83.5"/>
+  <use id="lamp-SEND" href="#led" x="171.5" y="83.5"/>
+  <use id="lamp-MAIL" href="#led" x="199.5" y="83.5"/>
+  <use id="lamp-ALARM" href="#led" x="269.5" y="83.5"/>
+
+  <text x="5" y="127" font-size="7.5" fill="#e3e3e3">H2095B  Inmarsat-C transceiver</text>
+</svg>

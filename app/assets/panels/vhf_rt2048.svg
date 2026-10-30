@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- VHF RT2048 front panel. Own drawing on the original's 471 x 225 layout.
+     Ids the app uses: key-0..key-9, key-SHIFT, key-16 (push keys), knob-SQ, knob-VOL_OFF (knob keys),
+     lcd (channel window), handset (PTT). Text uses DejaVu Sans (bundled, see ../fonts). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="471" height="225" viewBox="0 0 471 225"
+     font-family="DejaVu Sans">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#93b68f"/>
+      <stop offset="1" stop-color="#7c9f78"/>
+    </linearGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbfbff"/>
+      <stop offset="0.5" stop-color="#ebebf3"/>
+      <stop offset="1" stop-color="#cfcfd8"/>
+    </linearGradient>
+    <linearGradient id="bandEnd" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b2b2b2"/>
+      <stop offset="0.4" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#ebebf3"/>
+    </linearGradient>
+    <radialGradient id="screw" cx="0.35" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#e3e3e3"/>
+      <stop offset="1" stop-color="#9a9a9a"/>
+    </radialGradient>
+    <linearGradient id="keyGloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="lcdGlass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#bcc46a"/>
+      <stop offset="1" stop-color="#a8b05a"/>
+    </linearGradient>
+    <radialGradient id="handsetShine" cx="0.38" cy="0.32" r="0.7">
+      <stop offset="0" stop-color="#2a2c2a"/>
+      <stop offset="0.6" stop-color="#0a0b0a"/>
+      <stop offset="1" stop-color="#000000"/>
+    </radialGradient>
+    <!-- A key set into the plate: shadow edge above/left, light edge below/right, black cap. -->
+    <g id="keyWell">
+      <rect x="-1" y="-1" width="33" height="33" rx="4" fill="#597d61"/>
+      <rect x="0" y="0" width="33" height="33" rx="4" fill="#e3f3e3"/>
+      <rect x="0" y="0" width="32" height="32" rx="3" fill="#000"/>
+      <rect x="2" y="2" width="28" height="14" rx="2" fill="url(#keyGloss)"/>
+    </g>
+    <g id="screwHead">
+      <circle r="8.5" fill="#597d61"/>
+      <circle r="7.2" fill="#717171"/>
+      <circle r="6.2" fill="url(#screw)"/>
+      <path d="M-3.4,-0.9 L3.4,0.9 M-0.9,3.4 L0.9,-3.4" stroke="#000" stroke-width="1.1" stroke-linecap="round"/>
+    </g>
+    <g id="slot">
+      <rect x="0" y="-2" width="161" height="10" rx="4" fill="#597d61"/>
+      <rect x="0" y="1" width="161" height="9" rx="4" fill="#e3f3e3"/>
+      <rect x="0" y="0" width="161" height="8" rx="4" fill="#000"/>
+    </g>
+  </defs>
+
+  <!-- Frame: black rails with a grey line between, then the bevelled face. -->
+  <rect x="0" y="0" width="471" height="225" rx="7" fill="#000"/>
+  <rect x="2" y="2" width="467" height="221" rx="6" fill="none" stroke="#717171" stroke-width="1"/>
+  <rect x="4" y="4" width="463" height="217" rx="5" fill="url(#face)"/>
+  <path d="M9,5.5 H462" stroke="#e3f3e3" stroke-width="1.5"/>
+  <path d="M5.5,9 V216" stroke="#a6c7a2" stroke-width="1.5"/>
+  <path d="M9,219.5 H462 M465.5,9 V216" stroke="#597d61" stroke-width="1.5"/>
+
+  <!-- Title band. -->
+  <rect x="5" y="16" width="461" height="12" fill="url(#band)"/>
+  <rect x="5" y="16" width="6" height="12" fill="url(#bandEnd)"/>
+  <rect x="460" y="16" width="6" height="12" fill="url(#bandEnd)" transform="matrix(-1,0,0,1,926,0)"/>
+  <path d="M5,28.5 H466" stroke="#717171" stroke-width="1"/>
+  <text x="34" y="25" font-size="8" fill="#000">VHF RT2048</text>
+  <text x="437" y="25" font-size="8" fill="#000" text-anchor="end">MARINE VHF RADIOTELEPHONE</text>
+
+  <!-- Corner screws. -->
+  <use href="#screwHead" x="21" y="21"/>
+  <use href="#screwHead" x="450" y="21"/>
+  <use href="#screwHead" x="21" y="204"/>
+  <use href="#screwHead" x="450" y="204"/>
+
+  <!-- Loudspeaker grille. -->
+  <use href="#slot" x="26" y="33"/>
+  <use href="#slot" x="26" y="50"/>
+  <use href="#slot" x="26" y="67"/>
+  <use href="#slot" x="26" y="84"/>
+  <use href="#slot" x="26" y="101"/>
+  <use href="#slot" x="26" y="118"/>
+  <use href="#slot" x="26" y="135"/>
+  <use href="#slot" x="26" y="152"/>
+  <use href="#slot" x="26" y="169"/>
+  <use href="#slot" x="26" y="186"/>
+
+  <!-- Label strip. -->
+  <rect x="35" y="199" width="67" height="16" rx="8" fill="#597d61"/>
+  <rect x="34" y="198" width="67" height="16" rx="8" fill="#ebebf3"/>
+  <path d="M41,198.6 H94" stroke="#fff" stroke-width="1"/>
+  <text x="67.5" y="209" font-size="6" fill="#9a9a9a" text-anchor="middle">RT2048</text>
+
+  <!-- Squelch knob key: label and a small knob symbol. -->
+  <g id="knob-SQ" transform="translate(198,33)">
+    <use href="#keyWell"/>
+    <text x="4" y="10" font-size="6.5" font-weight="bold" fill="#fff">SQ</text>
+    <circle cx="20" cy="20" r="5.5" fill="none" stroke="#fff" stroke-width="1"/>
+    <path d="M20,20 L16.5,16.5" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/>
+  </g>
+
+  <!-- Volume / off knob key: the wedge shows the volume growing upwards. -->
+  <g id="knob-VOL_OFF" transform="translate(198,162)">
+    <use href="#keyWell"/>
+    <text x="4" y="10" font-size="6.5" font-weight="bold" fill="#fff">VOL</text>
+    <text x="4" y="28" font-size="6.5" font-weight="bold" fill="#fff">OFF</text>
+    <path d="M25.5,4 C19,9 18.5,22 26.5,28.5 L28,30 L24.5,29.5 C21,23 21,10 24,4.5 Z" fill="none" stroke="#fff" stroke-width="0.8" stroke-linejoin="round"/>
+  </g>
+
+  <!-- Channel display: window stepping down to the LCD. -->
+  <rect x="241" y="33" width="75" height="75" fill="#000"/>
+  <path d="M241,108.5 H316 M316.5,33 V108" stroke="#e3f3e3" stroke-width="1"/>
+  <g fill="none" stroke="#717171" stroke-width="1">
+    <rect x="246.5" y="34.5" width="66" height="52"/>
+    <rect x="248.5" y="36.5" width="62" height="48"/>
+    <rect x="250.5" y="38.5" width="58" height="44"/>
+    <rect x="252.5" y="40.5" width="54" height="40"/>
+  </g>
+  <rect id="lcd" x="253" y="42" width="51" height="36" fill="url(#lcdGlass)"/>
+  <path d="M253,43 H304 M254,42 V78" stroke="#000" stroke-opacity="0.35" stroke-width="2"/>
+
+  <!-- Handset rest. -->
+  <circle cx="279" cy="164" r="32" fill="#597d61"/>
+  <circle id="handset" cx="278" cy="162.5" r="32" fill="url(#handsetShine)"/>
+  <path d="M253,145 A32,32 0 0 1 264,134" fill="none" stroke="#8f8f8f" stroke-width="1"/>
+  <path d="M292,134 A32,32 0 0 1 302,142" fill="none" stroke="#5f5f5f" stroke-width="1"/>
+
+  <!-- Keypad: second function (green) above, main label (yellow) bottom right. -->
+  <g font-weight="bold">
+    <g id="key-1" transform="translate(327,33)"><use href="#keyWell"/>
+      <text x="4" y="9" font-size="6" fill="#00ebb2">SCAN</text>
+      <text transform="translate(28,29) scale(0.72,1)" font-size="19" fill="#ffeb00" text-anchor="end">1</text></g>
+    <g id="key-2" transform="translate(370,33)"><use href="#keyWell"/>
+      <text x="4" y="9" font-size="6" fill="#00ebb2">SCAN</text>
+      <text x="4" y="15" font-size="6" fill="#00ebb2">ADD</text>
+      <text transform="translate(28,29) scale(0.72,1)" font-size="19" fill="#ffeb00" text-anchor="end">2</text></g>
+    <g id="key-3" transform="translate(413,33)"><use href="#keyWell"/>
+      <text x="3" y="9" font-size="6" fill="#00ebb2">SCAN</text>
+      <text transform="translate(3,15) scale(0.85,1)" font-size="6" fill="#00ebb2">DELETE</text>
+      <text transform="translate(28,29) scale(0.72,1)" font-size="19" fill="#ffeb00" text-anchor="end">3</text></g>
+    <g id="key-4" transform="translate(327,76)"><use href="#keyWell"/>
+      <text transform="translate(3,9) scale(0.85,1)" font-size="6" fill="#00ebb2">SELCALL</text>
+      <text x="3" y="15" font-size="6" fill="#00ebb2">T/R</text>
+      <text transform="translate(28,29) scale(0.72,1)" font-size="19" fill="#ffeb00" text-anchor="end">4</text></g>
+    <g id="key-5" transform="translate(370,76)"><use href="#keyWell"/>
+      <text x="4" y="9" font-size="6" fill="#00ebb2">SCAN</text>
+      <text x="4" y="15" font-size="6" fill="#00ebb2">TIME</text>
+      <text transform="translate(28,29) scale(0.72,1)" font-size="19" fill="#ffeb00" text-anchor="end">5</text></g>
+    <g id="key-6" transform="translate(413,76)"><use href="#keyWell"/>
+      <text x="4" y="9" font-size="6" fill="#00ebb2">D.W.</text>
+      <text transform="translate(28,29) scale(0.72,1)" font-size="19" fill="#ffeb00" text-anchor="end">6</text></g>
+    <g id="key-7" transform="translate(327,119)"><use href="#keyWell"/>
+      <text x="4" y="9" font-size="6" fill="#00ebb2">DIM</text>
+      <text transform="translate(28,29) scale(0.72,1)" font-size="19" fill="#ffeb00" text-anchor="end">7</text></g>
+    <g id="key-8" transform="translate(370,119)"><use href="#keyWell"/>
+      <text x="4" y="9" font-size="6" fill="#00ebb2">U.S.</text>
+      <text transform="translate(28,29) scale(0.72,1)" font-size="19" fill="#ffeb00" text-anchor="end">8</text></g>
+    <g id="key-9" transform="translate(413,119)"><use href="#keyWell"/>
+      <text x="4" y="9" font-size="6" fill="#00ebb2">1W</text>
+      <text transform="translate(28,29) scale(0.72,1)" font-size="19" fill="#ffeb00" text-anchor="end">9</text></g>
+    <g id="key-0" transform="translate(327,162)"><use href="#keyWell"/>
+      <text x="4" y="9" font-size="6" fill="#00ebb2">P</text>
+      <text transform="translate(28,29) scale(0.72,1)" font-size="19" fill="#ffeb00" text-anchor="end">0</text></g>
+    <g id="key-SHIFT" transform="translate(370,162)"><use href="#keyWell"/>
+      <text transform="translate(16,20) scale(0.85,1)" font-size="8.5" fill="#00ebb2" text-anchor="middle">SHIFT</text></g>
+    <g id="key-16" transform="translate(413,162)"><use href="#keyWell"/>
+      <text transform="translate(28,29) scale(0.72,1)" font-size="19" fill="#df0000" text-anchor="end">16</text></g>
+  </g>
+</svg>

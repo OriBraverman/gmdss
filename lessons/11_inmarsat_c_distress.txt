@@ -1,0 +1,44 @@
+Inmarsat-C distress alert
+
+duration 240
+
+task 5 0 0
+Task 1: Switch on the Inmarsat-C transceiver and log in.
+_text_end
+
+move_and_press Inm
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press Inm.ON_OFF
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press Inm.Login
+delay 0 0 0.3
+release
+delay 0 0 1
+
+delay 0 0 15
+
+task 6 0 0
+Task 2: Send a distress alert with the transceiver keys.
+_text_end
+
+msg 6 0 0
+Press Set and Alarm together and hold them for 5 seconds (here: press both, the Alarm lamp flashes, the alert goes after 5 s).
+_text_end
+
+move_and_press Inm.SET+Inm.ALARM
+delay 0 0 0.3
+release
+delay 0 0 8
+
+msg 5 0 0
+The Alarm lamp stays on: the land earth station acknowledges the alert.
+_text_end
+
+delay 0 0 3
+exit

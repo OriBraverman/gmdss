@@ -1,0 +1,123 @@
+VHF DSC distress alert
+
+duration 300
+
+task 4 0 0
+Task 1: Switch on the VHF radiotelephone and the DSC controller.
+_text_end
+
+msg 4 0 0
+Open the VHF & DSC installation from the equipment list.
+_text_end
+
+move_and_press VHF
+delay 0 0 0.5
+release
+delay 0 0 1
+
+msg 4 0 0
+Click the VOL/OFF knob of the RT2048 to switch it on.
+_text_end
+
+move_and_press VHF.VOL_OFF
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 4 0 0
+Switch on the DSC controller with its own VOL/OFF knob.
+_text_end
+
+move_and_press VHF_DSC.VOL_OFF
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 4 0 0
+Task 2: Select the distress and calling channel 16.
+_text_end
+
+msg 4 0 0
+Press the red 16 key of the RT2048.
+_text_end
+
+move_and_press VHF.16
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 5 0 0
+Task 3: Send a DSC distress alert, nature "fire, explosion".
+_text_end
+
+msg 5 0 0
+Press DISTRESS. The display asks for the nature of distress.
+_text_end
+
+move_and_press VHF_DSC.DISTRESS
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 5 0 0
+Press the up arrow once for "Fire, explosion", then NEXT.
+_text_end
+
+move_and_press VHF_DSC.Up
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+move_and_press VHF_DSC.NEXT
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 5 0 0
+The display shows the ship's position. Accept it with NEXT.
+_text_end
+
+move_and_press VHF_DSC.NEXT
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 6 0 0
+Now press DISTRESS and SEND together
+(here: SEND within 3 seconds of DISTRESS).
+_text_end
+
+move_and_press VHF_DSC.DISTRESS+VHF_DSC.SEND
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 6 0 0
+Task 4: Wait for the acknowledgement and silence the alarm.
+_text_end
+
+msg 8 0 0
+The alert is repeated until a coast station acknowledges it.
+The acknowledgement usually comes within a minute: use the 10x
+clock if you do not want to wait.
+_text_end
+
+delay 0 0 60
+
+msg 5 0 0
+The coast station has acknowledged: the alarm sounds.
+Press STOP/ENT to silence it.
+_text_end
+
+move_and_press VHF_DSC.STOP_ENT
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 6 0 0
+Continue with distress traffic by voice on channel 16:
+hold the handset PTT and begin with MAYDAY.
+_text_end
+
+delay 0 0 2
+exit

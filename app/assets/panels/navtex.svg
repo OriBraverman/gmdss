@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- NAVTEX receiver NT-900 (printer and controls). Own drawing on the original's 583 x 308 layout.
+     Ids the app uses: paper (window with the last printed lines), lamp-ALARM lamp-PAPER lamp-LOCK lamp-EXT_RX,
+     key-MENU key-ALARM_STOP key-SELECT key-Up key-EXCLUDE key-Down key-LINE_FEED key-POWER,
+     keylamp-ALARM_STOP keylamp-POWER (small lamps in those keys).
+     Text uses DejaVu Sans (bundled, see ../fonts). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="583" height="308" viewBox="0 0 583 308"
+     font-family="DejaVu Sans">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#585440"/>
+      <stop offset="1" stop-color="#45412e"/>
+    </linearGradient>
+    <linearGradient id="cover" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#545039"/>
+      <stop offset="1" stop-color="#46422f"/>
+    </linearGradient>
+    <linearGradient id="keyGrey" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a3a389"/>
+      <stop offset="1" stop-color="#7f7f68"/>
+    </linearGradient>
+    <linearGradient id="keyYellow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e0b72a"/>
+      <stop offset="1" stop-color="#b48f10"/>
+    </linearGradient>
+    <linearGradient id="keyGreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5fa46b"/>
+      <stop offset="1" stop-color="#3f7a4a"/>
+    </linearGradient>
+    <linearGradient id="knob" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1a1a1a"/>
+      <stop offset="0.4" stop-color="#3a3a3a"/>
+      <stop offset="1" stop-color="#0d0d0d"/>
+    </linearGradient>
+    <g id="keyShadow"><rect x="1" y="1.5" width="32" height="24" rx="2" fill="#000" fill-opacity="0.55"/></g>
+    <g id="lampPlate">
+      <rect x="0" y="0" width="71" height="14" rx="1.5" fill="#8e8e75"/>
+      <path d="M0.5,13.5 H70.5 V0.5" fill="none" stroke="#5d5949" stroke-width="1"/>
+      <rect x="6" y="4" width="6" height="6" fill="#2c3034"/>
+    </g>
+    <!-- Ridged side knob. -->
+    <g id="sideKnob">
+      <rect x="0" y="0" width="30" height="72" rx="6" fill="url(#knob)"/>
+      <path d="M2,8 H28 M2,14 H28 M2,20 H28 M2,26 H28 M2,32 H28 M2,38 H28 M2,44 H28 M2,50 H28 M2,56 H28 M2,62 H28"
+            stroke="#4a4a4a" stroke-width="1.2"/>
+    </g>
+  </defs>
+
+  <!-- Mounting bracket behind the unit, side knobs. -->
+  <rect x="42" y="78" width="499" height="228" rx="6" fill="#383c18"/>
+  <rect x="44" y="80" width="495" height="224" rx="5" fill="#4d4934"/>
+  <use href="#sideKnob" x="10" y="100"/>
+  <use href="#sideKnob" x="545" y="100"/>
+
+  <!-- Housing. -->
+  <rect x="52" y="6" width="481" height="266" rx="8" fill="#000"/>
+  <rect x="54" y="8" width="477" height="262" rx="7" fill="url(#body)"/>
+  <path d="M62,9.5 H523" stroke="#797569" stroke-width="1.5"/>
+  <path d="M55.5,16 V262" stroke="#5d5949" stroke-width="1.5"/>
+  <path d="M62,268.5 H523 M529.5,16 V262" stroke="#383c18" stroke-width="1.5"/>
+
+  <!-- Title strip. -->
+  <rect x="82" y="29" width="293" height="22" fill="#000"/>
+  <text x="96" y="44" font-size="7.5" fill="#dfdbcb" letter-spacing="0.6">NAVTEX RECEIVER NT-900</text>
+
+  <!-- Paper window. -->
+  <rect x="82" y="55" width="293" height="34" fill="#2c3034"/>
+  <rect id="paper" x="88" y="58" width="281" height="28" fill="#e9e6d6"/>
+  <path d="M88,58.5 H369" stroke="#000" stroke-opacity="0.35" stroke-width="2"/>
+  <path d="M88,85.5 H369" stroke="#454941" stroke-width="1"/>
+
+  <!-- Printer cover with its ridges. -->
+  <rect x="82" y="91" width="293" height="150" rx="2" fill="#000"/>
+  <rect x="85" y="93" width="288" height="146" rx="2" fill="#383c18"/>
+  <rect x="91" y="97" width="281" height="108" rx="2" fill="url(#cover)"/>
+  <path d="M91,96.5 H372" stroke="#797569" stroke-width="1"/>
+  <path d="M91.5,97 V205" stroke="#5d5949" stroke-width="1"/>
+  <g stroke-width="1.5">
+    <path d="M92,207 H372 M92,213 H372 M92,219 H372 M92,225 H372 M92,231 H372" stroke="#5d5949"/>
+    <path d="M92,209 H372 M92,215 H372 M92,221 H372 M92,227 H372 M92,233 H372" stroke="#383c18"/>
+  </g>
+
+  <!-- Control panel. -->
+  <rect x="401" y="29" width="98" height="212" rx="2" fill="#383c18"/>
+  <rect x="402" y="30" width="96" height="210" rx="2" fill="#2c3034"/>
+  <rect x="403" y="32" width="94" height="207" rx="2" fill="#4d4934"/>
+
+  <g font-size="6.5" fill="#dfdbcb">
+    <use href="#lampPlate" x="415" y="41"/><text x="437" y="50.5">ALARM</text>
+    <use href="#lampPlate" x="415" y="57"/><text x="437" y="66.5">PAPER</text>
+    <use href="#lampPlate" x="415" y="73"/><text x="437" y="82.5">LOCK</text>
+    <use href="#lampPlate" x="415" y="89"/><text x="437" y="98.5">EXT RX</text>
+  </g>
+  <rect id="lamp-ALARM" x="421" y="45" width="6" height="6" fill="#2c3034"/>
+  <rect id="lamp-PAPER" x="421" y="61" width="6" height="6" fill="#2c3034"/>
+  <rect id="lamp-LOCK" x="421" y="77" width="6" height="6" fill="#2c3034"/>
+  <rect id="lamp-EXT_RX" x="421" y="93" width="6" height="6" fill="#2c3034"/>
+
+  <g font-size="6.5" fill="#f2efe0" text-anchor="middle">
+    <g id="key-MENU" transform="translate(415,112)"><use href="#keyShadow"/>
+      <rect width="32" height="24" rx="2" fill="url(#keyGrey)"/><text x="16" y="14.5">MENU</text></g>
+    <g id="key-ALARM_STOP" transform="translate(454,112)"><use href="#keyShadow"/>
+      <rect width="32" height="24" rx="2" fill="url(#keyYellow)"/><text x="17" y="10">ALARM</text><text x="17" y="19">STOP</text>
+      <rect id="keylamp-ALARM_STOP" x="1" y="1" width="6" height="6" fill="#2c3034"/></g>
+    <g id="key-SELECT" transform="translate(415,143)"><use href="#keyShadow"/>
+      <rect width="32" height="24" rx="2" fill="url(#keyGrey)"/><text x="16" y="14.5">SELECT</text></g>
+    <g id="key-Up" transform="translate(454,143)"><use href="#keyShadow"/>
+      <rect width="32" height="24" rx="2" fill="url(#keyGrey)"/><path d="M13,9 L16,4.5 L19,9 Z"/><text x="16" y="19">MONITOR</text></g>
+    <g id="key-EXCLUDE" transform="translate(415,174)"><use href="#keyShadow"/>
+      <rect width="32" height="24" rx="2" fill="url(#keyGrey)"/><text x="16" y="14.5">EXCLUDE</text></g>
+    <g id="key-Down" transform="translate(454,174)"><use href="#keyShadow"/>
+      <rect width="32" height="24" rx="2" fill="url(#keyGrey)"/><path d="M13,4.5 L16,9 L19,4.5 Z"/><text x="16" y="19">DIMMER</text></g>
+    <g id="key-LINE_FEED" transform="translate(415,205)"><use href="#keyShadow"/>
+      <rect width="32" height="24" rx="2" fill="url(#keyGrey)"/><text x="16" y="10">LINE</text><text x="16" y="19">FEED</text></g>
+    <g id="key-POWER" transform="translate(454,205)"><use href="#keyShadow"/>
+      <rect width="32" height="24" rx="2" fill="url(#keyGreen)"/><text x="17" y="15.5">POWER</text>
+      <rect id="keylamp-POWER" x="1" y="1" width="6" height="6" fill="#2c3034"/></g>
+  </g>
+</svg>

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- HF SSB RE2100 front panel. Own drawing on the original's 471 x 225 layout.
+     Ids the app uses: knob-VOL, knob-RF (knob keys); meter, ramp, freq-rx, freq-tx, modes, alarm (display areas);
+     key-FREQ_Down key-FREQ_Up key-TUNE_CLARIF key-RX key-CH key-AGC_POWER key-DIM_DUMMY_LOAD key-SEND_ALARM
+     key-2182 key-TEST_ALARM key-TX key-SC key-SQ_ADD key-MODE_DEL key-0..key-9 key-Dot key-STOP_ENT.
+     Text uses DejaVu Sans (bundled, see ../fonts). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="471" height="225" viewBox="0 0 471 225"
+     font-family="DejaVu Sans">
+  <defs>
+    <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#93b68f"/>
+      <stop offset="1" stop-color="#7c9f78"/>
+    </linearGradient>
+    <linearGradient id="band" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbfbff"/>
+      <stop offset="0.5" stop-color="#ebebf3"/>
+      <stop offset="1" stop-color="#cfcfd8"/>
+    </linearGradient>
+    <linearGradient id="bandEnd" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#b2b2b2"/>
+      <stop offset="0.4" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#ebebf3"/>
+    </linearGradient>
+    <radialGradient id="screw" cx="0.35" cy="0.3" r="0.8">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.45" stop-color="#e3e3e3"/>
+      <stop offset="1" stop-color="#9a9a9a"/>
+    </radialGradient>
+    <linearGradient id="keyGloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.16"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <g id="keyWell">
+      <rect x="-1" y="-1" width="33" height="33" rx="4" fill="#597d61"/>
+      <rect x="0" y="0" width="33" height="33" rx="4" fill="#e3f3e3"/>
+      <rect x="0" y="0" width="32" height="32" rx="3" fill="#000"/>
+      <rect x="2" y="2" width="28" height="14" rx="2" fill="url(#keyGloss)"/>
+    </g>
+    <g id="screwHead">
+      <circle r="8.5" fill="#597d61"/>
+      <circle r="7.2" fill="#717171"/>
+      <circle r="6.2" fill="url(#screw)"/>
+      <path d="M-3.4,-0.9 L3.4,0.9 M-0.9,3.4 L0.9,-3.4" stroke="#000" stroke-width="1.1" stroke-linecap="round"/>
+    </g>
+    <g id="knobMark">
+      <circle cx="20" cy="20" r="6.5" fill="none" stroke="#b2b2b2" stroke-width="1"/>
+      <path d="M14.5,15 H24 M20,20 L24,25" stroke="#717171" stroke-width="1"/>
+    </g>
+  </defs>
+
+  <!-- Frame and face. -->
+  <rect x="0" y="0" width="471" height="225" rx="7" fill="#000"/>
+  <rect x="2" y="2" width="467" height="221" rx="6" fill="none" stroke="#717171" stroke-width="1"/>
+  <rect x="4" y="4" width="463" height="217" rx="5" fill="url(#face)"/>
+  <path d="M9,5.5 H462" stroke="#e3f3e3" stroke-width="1.5"/>
+  <path d="M5.5,9 V216" stroke="#a6c7a2" stroke-width="1.5"/>
+  <path d="M9,219.5 H462 M465.5,9 V216" stroke="#597d61" stroke-width="1.5"/>
+
+  <!-- Title band. -->
+  <rect x="5" y="16" width="461" height="12" fill="url(#band)"/>
+  <rect x="5" y="16" width="6" height="12" fill="url(#bandEnd)"/>
+  <rect x="460" y="16" width="6" height="12" fill="url(#bandEnd)" transform="matrix(-1,0,0,1,926,0)"/>
+  <path d="M5,28.5 H466" stroke="#717171" stroke-width="1"/>
+  <text x="34" y="25" font-size="8" fill="#000">HF SSB RE2100</text>
+  <text x="437" y="25" font-size="8" fill="#000" text-anchor="end">MF/HF SSB RADIOTELEPHONE</text>
+
+  <use href="#screwHead" x="21" y="21"/>
+  <use href="#screwHead" x="450" y="21"/>
+  <use href="#screwHead" x="21" y="204"/>
+  <use href="#screwHead" x="450" y="204"/>
+
+  <!-- Label strip. -->
+  <rect x="35" y="199" width="67" height="16" rx="8" fill="#597d61"/>
+  <rect x="34" y="198" width="67" height="16" rx="8" fill="#ebebf3"/>
+  <path d="M41,198.6 H94" stroke="#fff" stroke-width="1"/>
+  <text x="67.5" y="209" font-size="6" fill="#9a9a9a" text-anchor="middle">RE2100</text>
+
+  <!-- Display window: black, floor lines in perspective, printed labels and scales. -->
+  <rect x="69" y="33" width="247" height="75" fill="#000"/>
+  <path d="M70,108.5 H315 M314.5,35 V108" stroke="#a6c7a2" stroke-width="1"/>
+  <path d="M71,109.5 H314" stroke="#e3f3e3" stroke-width="1"/>
+  <g fill="none" stroke="#717171" stroke-width="1">
+    <path d="M75.5,82.5 H309.5 M73.5,84.5 H311.5 M71.5,86.5 H313.5"/>
+    <path d="M309.5,40 V82.5 M311.5,38 V84.5 M313.5,36 V86.5"/>
+  </g>
+  <g fill="#e3e3e3" font-size="6">
+    <text x="84" y="46.5">SIGNAL/AE-CURRENT</text>
+    <text x="87.5" y="63.5" text-anchor="middle">0</text>
+    <text x="102" y="63.5" text-anchor="middle">.5</text>
+    <text x="116.5" y="63.5" text-anchor="middle">1</text>
+    <text x="129" y="63.5" text-anchor="middle">2</text>
+    <text x="142" y="63.5" text-anchor="middle">3</text>
+    <text x="84" y="79.5">TX-POWER</text>
+    <text x="290" y="46">RX</text>
+    <text x="290" y="53">kHz</text>
+    <text x="290" y="72">TX</text>
+    <text x="290" y="79">kHz</text>
+  </g>
+  <path d="M121,79.5 H147 V74.5 Z" fill="none" stroke="#e3e3e3" stroke-width="0.8"/>
+  <!-- Meter segments, unlit; the app lights them. -->
+  <g id="meter" fill="#3a0c06">
+    <rect x="86" y="49" width="5" height="7"/><rect x="92" y="49" width="5" height="7"/>
+    <rect x="98" y="49" width="5" height="7"/><rect x="104" y="49" width="5" height="7"/>
+    <rect x="110" y="49" width="5" height="7"/><rect x="116" y="49" width="5" height="7"/>
+    <rect x="122" y="49" width="5" height="7"/><rect x="128" y="49" width="5" height="7"/>
+    <rect x="134" y="49" width="5" height="7"/><rect x="140" y="49" width="5" height="7"/>
+  </g>
+  <!-- Areas the app writes into. -->
+  <rect id="ramp" x="121" y="74.5" width="26" height="5" fill="#000"/>
+  <rect id="modes" x="84" y="66" width="120" height="6" fill="#000"/>
+  <rect id="alarm" x="152" y="49" width="56" height="7" fill="#000"/>
+  <rect id="freq-rx" x="200" y="38" width="86" height="20" fill="#000"/>
+  <rect id="freq-tx" x="200" y="64" width="86" height="20" fill="#000"/>
+
+  <!-- Knob keys. -->
+  <g id="knob-VOL" transform="translate(26,33)">
+    <use href="#keyWell"/>
+    <text x="4" y="8.5" font-size="6" font-weight="bold" fill="#e3e3e3">VOL</text>
+    <text x="5.5" y="17" font-size="5.5" font-weight="bold" fill="#e3e3e3" text-anchor="middle">O</text>
+    <text x="5.5" y="23" font-size="5.5" font-weight="bold" fill="#e3e3e3" text-anchor="middle">F</text>
+    <text x="5.5" y="29" font-size="5.5" font-weight="bold" fill="#e3e3e3" text-anchor="middle">F</text>
+    <use href="#knobMark"/>
+  </g>
+  <g id="knob-RF" transform="translate(26,76)">
+    <use href="#keyWell"/>
+    <text x="4" y="8.5" font-size="6" font-weight="bold" fill="#e3e3e3">RF</text>
+    <use href="#knobMark"/>
+  </g>
+
+  <!-- Function keys: label on top (small), function below. -->
+  <g fill="#ffeb00">
+    <g id="key-FREQ_Down" transform="translate(26,119)"><use href="#keyWell"/>
+      <text transform="translate(4,9) scale(0.88,1)" font-size="6.5" text-anchor="start">FREQ</text>
+      <path d="M9,13.5 H23 L16,26.5 Z" fill="none" stroke="#ffeb00" stroke-width="2" stroke-linejoin="round"/></g>
+    <g id="key-FREQ_Up" transform="translate(69,119)"><use href="#keyWell"/>
+      <text transform="translate(4,9) scale(0.88,1)" font-size="6.5" text-anchor="start">FREQ</text>
+      <path d="M9,26.5 H23 L16,13.5 Z" fill="none" stroke="#ffeb00" stroke-width="2" stroke-linejoin="round"/></g>
+    <g id="key-TUNE_CLARIF" transform="translate(112,119)"><use href="#keyWell"/>
+      <text transform="translate(4,10) scale(0.88,1)" font-size="7" text-anchor="start">TUNE</text>
+      <text transform="translate(4,27) scale(0.88,1)" font-size="7" text-anchor="start">CLARIF</text></g>
+    <g id="key-RX" transform="translate(155,119)"><use href="#keyWell"/>
+      <text x="16" y="20.5" font-size="10" font-weight="bold" text-anchor="middle">RX</text></g>
+    <g id="key-CH" transform="translate(198,119)"><use href="#keyWell"/>
+      <text x="16" y="20.5" font-size="10" font-weight="bold" text-anchor="middle">CH</text></g>
+    <g id="key-AGC_POWER" transform="translate(241,119)"><use href="#keyWell"/>
+      <text transform="translate(4,10) scale(0.88,1)" font-size="7" text-anchor="start">AGC</text>
+      <text transform="translate(29,27) scale(0.88,1)" font-size="7" text-anchor="end">POWER</text></g>
+    <g id="key-DIM_DUMMY_LOAD" transform="translate(284,119)"><use href="#keyWell"/>
+      <text transform="translate(4,10) scale(0.88,1)" font-size="7" text-anchor="start">DIM</text>
+      <text transform="translate(4,20) scale(0.88,1)" font-size="7" text-anchor="start">DUMMY</text>
+      <text transform="translate(4,28) scale(0.88,1)" font-size="7" text-anchor="start">LOAD</text></g>
+    <g id="key-SEND_ALARM" transform="translate(26,162)"><use href="#keyWell"/>
+      <text transform="translate(4,20) scale(0.88,1)" font-size="7" text-anchor="start">SEND</text>
+      <text transform="translate(4,28) scale(0.88,1)" font-size="7" text-anchor="start">ALARM</text></g>
+    <g id="key-2182" transform="translate(69,162)"><use href="#keyWell"/>
+      <text transform="translate(16,20) scale(0.9,1)" font-size="8.5" font-weight="bold" fill="#df0000" text-anchor="middle">2182</text></g>
+    <g id="key-TEST_ALARM" transform="translate(112,162)"><use href="#keyWell"/>
+      <text transform="translate(4,20) scale(0.88,1)" font-size="7" text-anchor="start">TEST</text>
+      <text transform="translate(4,28) scale(0.88,1)" font-size="7" text-anchor="start">ALARM</text></g>
+    <g id="key-TX" transform="translate(155,162)"><use href="#keyWell"/>
+      <text x="16" y="20.5" font-size="10" font-weight="bold" text-anchor="middle">TX</text></g>
+    <g id="key-SC" transform="translate(198,162)"><use href="#keyWell"/>
+      <text x="16" y="20.5" font-size="10" font-weight="bold" text-anchor="middle">SC</text></g>
+    <g id="key-SQ_ADD" transform="translate(241,162)"><use href="#keyWell"/>
+      <text transform="translate(4,10) scale(0.88,1)" font-size="7" text-anchor="start">SQ</text>
+      <text transform="translate(29,27) scale(0.88,1)" font-size="7" text-anchor="end">ADD</text></g>
+    <g id="key-MODE_DEL" transform="translate(284,162)"><use href="#keyWell"/>
+      <text transform="translate(4,10) scale(0.88,1)" font-size="7" text-anchor="start">MODE</text>
+      <text transform="translate(29,27) scale(0.88,1)" font-size="7" text-anchor="end">DEL</text></g>
+
+    <!-- Numeric keys: large digit in the middle. -->
+    <g font-size="19" font-weight="bold" text-anchor="end">
+      <g id="key-1" transform="translate(327,33)"><use href="#keyWell"/><text transform="translate(28,29) scale(0.72,1)">1</text></g>
+      <g id="key-2" transform="translate(370,33)"><use href="#keyWell"/><text transform="translate(28,29) scale(0.72,1)">2</text></g>
+      <g id="key-3" transform="translate(413,33)"><use href="#keyWell"/><text transform="translate(28,29) scale(0.72,1)">3</text></g>
+      <g id="key-4" transform="translate(327,76)"><use href="#keyWell"/><text transform="translate(28,29) scale(0.72,1)">4</text></g>
+      <g id="key-5" transform="translate(370,76)"><use href="#keyWell"/><text transform="translate(28,29) scale(0.72,1)">5</text></g>
+      <g id="key-6" transform="translate(413,76)"><use href="#keyWell"/><text transform="translate(28,29) scale(0.72,1)">6</text></g>
+      <g id="key-7" transform="translate(327,119)"><use href="#keyWell"/><text transform="translate(28,29) scale(0.72,1)">7</text></g>
+      <g id="key-8" transform="translate(370,119)"><use href="#keyWell"/><text transform="translate(28,29) scale(0.72,1)">8</text></g>
+      <g id="key-9" transform="translate(413,119)"><use href="#keyWell"/><text transform="translate(28,29) scale(0.72,1)">9</text></g>
+      <g id="key-0" transform="translate(327,162)"><use href="#keyWell"/><text transform="translate(28,29) scale(0.72,1)">0</text></g>
+      <g id="key-Dot" transform="translate(370,162)"><use href="#keyWell"/><text transform="translate(28,29) scale(0.72,1)">.</text></g>
+    </g>
+    <g id="key-STOP_ENT" transform="translate(413,162)"><use href="#keyWell"/>
+      <text transform="translate(29,9) scale(0.85,1)" font-size="6.5" text-anchor="end">STOP</text>
+      <text transform="translate(29,28) scale(0.85,1)" font-size="11" text-anchor="end">ENT</text></g>
+  </g>
+</svg>

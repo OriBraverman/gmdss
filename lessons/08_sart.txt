@@ -1,0 +1,59 @@
+SART self test and activation
+
+duration 180
+
+task 5 0 0
+Task 1: Test the SART in its bracket (probe in the 3 mm hole).
+_text_end
+
+move_and_press SART
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press SART.TEST
+delay 0 0 0.3
+release
+delay 0 0 6
+
+msg 5 0 0
+The lamp flashed once: the test is good.
+_text_end
+
+task 6 0 0
+Task 2: Activate it as in an abandon-ship situation.
+_text_end
+
+msg 5 0 0
+Take it out of the bracket and pull the pin.
+_text_end
+
+move_and_press SART.BRACKET
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press SART.switch
+delay 0 0 0.3
+release
+delay 0 0 13
+
+msg 6 0 0
+STANDBY: the lamp flashes and it beeps every 12 seconds until a radar reaches it.
+_text_end
+
+task 5 0 0
+Task 3: Switch it off and put it back.
+_text_end
+
+move_and_press SART.switch
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press SART.BRACKET
+delay 0 0 0.3
+release
+delay 0 0 1
+
+exit

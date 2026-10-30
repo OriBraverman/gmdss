@@ -1,0 +1,28 @@
+Testing the radiotelephone alarm generator
+
+duration 120
+
+task 5 0 0
+Task 1: Switch on the RE2100.
+_text_end
+
+move_and_press HF
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press HF.VOL
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 6 0 0
+Task 2: Test the two-tone alarm generator (the test goes into the dummy load, not on the air).
+_text_end
+
+move_and_press HF.TEST_ALARM
+delay 0 0 0.3
+release
+delay 0 0 4
+
+exit

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Portable GMDSS VHF (SP3110 type). Own drawing on the original's 147 x 478 layout.
+     Ids the app uses: lcd, key-SPK key-LOCK key-BEEP key-ON_OFF key-PWR key-Up key-Down key-VOL key-CH key-SQ
+     key-A key-B key-16. Text uses DejaVu Sans (bundled, see ../fonts). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="147" height="478" viewBox="0 0 147 478"
+     font-family="DejaVu Sans">
+  <defs>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#3a3a3a"/>
+      <stop offset="0.15" stop-color="#555"/>
+      <stop offset="0.85" stop-color="#4a4a4a"/>
+      <stop offset="1" stop-color="#2e2e2e"/>
+    </linearGradient>
+    <linearGradient id="key" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d4b628"/>
+      <stop offset="1" stop-color="#a88c10"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c0632e"/>
+      <stop offset="1" stop-color="#9a4a22"/>
+    </linearGradient>
+    <linearGradient id="lcdGlass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a6b4c"/>
+      <stop offset="1" stop-color="#465539"/>
+    </linearGradient>
+    <g id="keyShadow"><rect x="1" y="1.5" width="31" height="22" rx="5" fill="#000" fill-opacity="0.6"/></g>
+  </defs>
+
+  <!-- Antenna and top cap. -->
+  <rect x="13" y="0" width="22" height="50" rx="5" fill="#2a2a28"/>
+  <path d="M17,4 V46 M22,4 V46 M27,4 V46 M31,4 V46" stroke="#5d5d5d" stroke-width="1"/>
+  <rect x="59" y="40" width="79" height="12" rx="3" fill="#30302c"/>
+
+  <!-- Body. -->
+  <rect x="2" y="49" width="143" height="427" rx="8" fill="#000"/>
+  <rect x="3" y="50" width="141" height="425" rx="7" fill="url(#body)"/>
+  <path d="M8,52.5 H139" stroke="#8a8a8a" stroke-width="1.5"/>
+
+  <!-- Loudspeaker grille. -->
+  <rect x="9" y="56" width="129" height="100" rx="10" fill="#30302c"/>
+  <rect x="13" y="58" width="123" height="96" rx="9" fill="#494949"/>
+  <g fill="#000">
+    <rect x="44" y="69" width="86" height="3" rx="1.5"/>
+    <rect x="30" y="77" width="98" height="3" rx="1.5"/>
+    <rect x="27" y="86" width="103" height="3" rx="1.5"/>
+    <rect x="24" y="95" width="106" height="3" rx="1.5"/>
+    <rect x="23" y="103" width="108" height="3" rx="1.5"/>
+    <rect x="23" y="111" width="108" height="3" rx="1.5"/>
+    <rect x="25" y="120" width="105" height="3" rx="1.5"/>
+    <rect x="30" y="129" width="100" height="3" rx="1.5"/>
+    <rect x="44" y="138" width="86" height="3" rx="1.5"/>
+  </g>
+
+  <!-- Display. -->
+  <rect x="7" y="161" width="133" height="57" rx="3" fill="#30302c"/>
+  <rect id="lcd" x="10" y="167" width="127" height="45" rx="2" fill="url(#lcdGlass)"/>
+  <path d="M11,168 H136 M11,168 V211" stroke="#000" stroke-opacity="0.4" stroke-width="2"/>
+
+  <!-- Keys. -->
+  <g fill="#30302c">
+    <g id="key-SPK" transform="translate(17,229)">
+      <circle cx="11.5" cy="12" r="11.5" fill="#000" fill-opacity="0.6"/><circle cx="11" cy="11" r="11" fill="url(#key)"/>
+      <path d="M6,8.5 H9 L13,5 V17 L9,13.5 H6 Z"/><path d="M15,8 Q17.5,11 15,14" fill="none" stroke="#30302c" stroke-width="1.2"/></g>
+    <g id="key-LOCK" transform="translate(48,229)">
+      <circle cx="11.5" cy="12" r="11.5" fill="#000" fill-opacity="0.6"/><circle cx="11" cy="11" r="11" fill="url(#key)"/>
+      <circle cx="7.5" cy="11" r="3.2" fill="none" stroke="#30302c" stroke-width="1.6"/><path d="M10.5,11 H17 M15,11 V14 M17,11 V13.5" stroke="#30302c" stroke-width="1.6"/></g>
+    <g id="key-BEEP" transform="translate(79,229)">
+      <circle cx="11.5" cy="12" r="11.5" fill="#000" fill-opacity="0.6"/><circle cx="11" cy="11" r="11" fill="url(#key)"/>
+      <path d="M12,5 V14.5" stroke="#30302c" stroke-width="1.5"/><ellipse cx="9.8" cy="15" rx="2.6" ry="2" fill="#30302c"/><path d="M12,5 Q16,6 15.5,10" fill="none" stroke="#30302c" stroke-width="1.4"/></g>
+    <g id="key-ON_OFF" transform="translate(110,229)">
+      <circle cx="11.5" cy="12" r="11.5" fill="#000" fill-opacity="0.6"/><circle cx="11" cy="11" r="11" fill="url(#key)"/>
+      <path d="M7.6,7.6 A5,5 0 1 0 14.4,7.6" fill="none" stroke="#30302c" stroke-width="1.6"/><path d="M11,4.5 V10.5" stroke="#30302c" stroke-width="1.6"/></g>
+  </g>
+  <g font-size="8" font-weight="bold" fill="#30302c" text-anchor="middle">
+    <g id="key-PWR" transform="translate(17,261)"><use href="#keyShadow"/><rect width="31" height="22" rx="5" fill="url(#key)"/><text x="15.5" y="14.5">PWR</text></g>
+    <g id="key-VOL" transform="translate(101,261)"><use href="#keyShadow"/><rect width="31" height="22" rx="5" fill="url(#key)"/><text x="15.5" y="14.5">VOL</text></g>
+    <g id="key-CH" transform="translate(17,291)"><use href="#keyShadow"/><rect width="31" height="22" rx="5" fill="url(#key)"/><text x="15.5" y="14.5">CH</text></g>
+    <g id="key-SQ" transform="translate(101,291)"><use href="#keyShadow"/><rect width="31" height="22" rx="5" fill="url(#key)"/><text x="15.5" y="14.5">SQ</text></g>
+  </g>
+  <!-- Up / down rocker. -->
+  <rect x="57" y="260" width="34" height="55" rx="7" fill="#510049" fill-opacity="0.6"/>
+  <rect x="58" y="261" width="32" height="52" rx="6" fill="url(#key)"/>
+  <path d="M60,287 H88" stroke="#964128" stroke-width="1"/>
+  <g id="key-Up" transform="translate(58,261)"><rect width="32" height="26" rx="6" fill="#000" fill-opacity="0"/><path d="M10,17 L16,6 L22,17 Z" fill="#000"/></g>
+  <g id="key-Down" transform="translate(58,287)"><rect width="32" height="26" rx="6" fill="#000" fill-opacity="0"/><path d="M10,8 L16,19 L22,8 Z" fill="#000"/></g>
+  <!-- A, B, 16. -->
+  <g font-size="14" font-weight="bold" text-anchor="middle">
+    <g id="key-A" transform="translate(18,326)"><rect x="-2" y="-1" width="33" height="24" rx="5" fill="#510049"/><rect width="30" height="21" rx="4" fill="url(#key)"/><text x="15" y="16" fill="#000">A</text></g>
+    <g id="key-B" transform="translate(59,326)"><rect x="-2" y="-1" width="33" height="24" rx="5" fill="#510049"/><rect width="30" height="21" rx="4" fill="url(#key)"/><text x="15" y="16" fill="#000">B</text></g>
+    <g id="key-16" transform="translate(101,326)"><rect x="-2" y="-1" width="33" height="24" rx="5" fill="#510049"/><rect width="30" height="21" rx="4" fill="url(#key)"/><text x="15" y="16" fill="#000">16</text></g>
+  </g>
+
+  <!-- Orange strap and label. -->
+  <rect x="2" y="363" width="143" height="59" fill="url(#orange)"/>
+  <rect x="20" y="367" width="108" height="51" rx="6" fill="#a65528" stroke="#30302c" stroke-width="1"/>
+  <g font-size="8" font-weight="bold" fill="#000" text-anchor="middle">
+    <text x="74" y="384">GMDSS</text>
+    <text x="74" y="395">EMERGENCY</text>
+    <text x="74" y="406">VHF</text>
+  </g>
+
+  <!-- Lower body and battery pack. -->
+  <path d="M9,446.5 H139" stroke="#5d5d5d" stroke-width="1"/>
+  <rect x="3" y="447" width="141" height="28" rx="6" fill="#3e3e3e"/>
+  <path d="M17,456 H120 M17,467 H120" stroke="#30302c" stroke-width="2"/>
+  <circle cx="30" cy="461.5" r="2" fill="#000"/>
+</svg>

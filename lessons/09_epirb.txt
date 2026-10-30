@@ -1,0 +1,51 @@
+EPIRB test and manual activation
+
+duration 180
+
+task 5 0 0
+Task 1: Test the EPIRB with the TEST key.
+_text_end
+
+move_and_press EPIRB
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press EPIRB.TEST
+delay 0 0 0.3
+release
+delay 0 0 4
+
+task 6 0 0
+Task 2: Activate it by hand: out of the release mechanism, switch to ON.
+_text_end
+
+move_and_press EPIRB.BRACKET
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press EPIRB.ON
+delay 0 0 0.3
+release
+delay 0 0 6
+
+msg 6 0 0
+It transmits on 406 MHz with 121.5 MHz homing; the strobe flashes.
+_text_end
+
+task 5 0 0
+Task 3: Back to AUTO and into the release mechanism (a false alert must be reported).
+_text_end
+
+move_and_press EPIRB.AUTO
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press EPIRB.BRACKET
+delay 0 0 0.3
+release
+delay 0 0 1
+
+exit

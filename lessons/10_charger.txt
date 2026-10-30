@@ -1,0 +1,23 @@
+Battery charger in automatic mode
+
+duration 60
+
+task 5 0 0
+Task: set the battery charger to automatic charging.
+_text_end
+
+move_and_press Charger
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 6 0 0
+AUTO charges at full current, then holds the battery with a trickle charge.
+_text_end
+
+move_and_press Charger.AUTO
+delay 0 0 0.3
+release
+delay 0 0 2
+
+exit

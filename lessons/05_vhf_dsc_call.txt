@@ -1,0 +1,144 @@
+VHF DSC individual call to a coast station
+
+duration 300
+
+task 5 0 0
+Task 1: Switch on the VHF radiotelephone and the DSC controller.
+_text_end
+
+move_and_press VHF
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press VHF.VOL_OFF
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+move_and_press VHF_DSC.VOL_OFF
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 6 0 0
+Task 2: Call HAIFA RADIO (MMSI 004281000), routine, simplex, working channel 06.
+_text_end
+
+msg 5 0 0
+Press CALL and key in the coast station's MMSI.
+_text_end
+
+move_and_press VHF_DSC.CALL
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press VHF_DSC.0
+delay 0 0 0.3
+release
+delay 0 0 0.4
+
+move_and_press VHF_DSC.0
+delay 0 0 0.3
+release
+delay 0 0 0.4
+
+move_and_press VHF_DSC.4
+delay 0 0 0.3
+release
+delay 0 0 0.4
+
+move_and_press VHF_DSC.2
+delay 0 0 0.3
+release
+delay 0 0 0.4
+
+move_and_press VHF_DSC.8
+delay 0 0 0.3
+release
+delay 0 0 0.4
+
+move_and_press VHF_DSC.1
+delay 0 0 0.3
+release
+delay 0 0 0.4
+
+move_and_press VHF_DSC.0
+delay 0 0 0.3
+release
+delay 0 0 0.4
+
+move_and_press VHF_DSC.0
+delay 0 0 0.3
+release
+delay 0 0 0.4
+
+move_and_press VHF_DSC.0
+delay 0 0 0.3
+release
+delay 0 0 0.4
+
+msg 5 0 0
+NEXT: the category (Routine) - NEXT: the telecommand (F3E simplex) - NEXT.
+_text_end
+
+move_and_press VHF_DSC.NEXT
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+move_and_press VHF_DSC.NEXT
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+move_and_press VHF_DSC.NEXT
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+msg 5 0 0
+Key in the working channel 06 and press NEXT.
+_text_end
+
+move_and_press VHF_DSC.0
+delay 0 0 0.3
+release
+delay 0 0 0.4
+
+move_and_press VHF_DSC.6
+delay 0 0 0.3
+release
+delay 0 0 0.4
+
+move_and_press VHF_DSC.NEXT
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 5 0 0
+Press SEND. The controller waits for the acknowledgement.
+_text_end
+
+move_and_press VHF_DSC.SEND
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 6 0 0
+Task 3: Wait for the acknowledgement, then silence the alarm.
+_text_end
+
+delay 0 0 20
+
+msg 5 0 0
+The coast station acknowledged: press STOP/ENT and change to channel 06 on the RT2048.
+_text_end
+
+move_and_press VHF_DSC.STOP_ENT
+delay 0 0 0.3
+release
+delay 0 0 1
+
+exit

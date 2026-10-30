@@ -1,0 +1,58 @@
+Portable VHF: switch on, on-scene channel, keypad lock
+
+duration 180
+
+move_and_press VHF_Portable
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 5 0 0
+Task 1: Switch on the portable VHF: hold ON/OFF for one second.
+_text_end
+
+move_and_press VHF_Portable.ON_OFF
+delay 0 0 1.5
+release
+delay 0 0 1
+
+msg 5 0 0
+The set starts on channel 16, high power. Quick key A holds channel 06, the on-scene channel for
+search and rescue.
+_text_end
+
+move_and_press VHF_Portable.A
+delay 0 0 0.3
+release
+delay 0 0 2
+
+task 5 0 0
+Task 2: Save the battery: select low power. PWR, then DOWN.
+_text_end
+
+move_and_press VHF_Portable.PWR
+delay 0 0 0.3
+release
+delay 0 0 0.5
+
+move_and_press VHF_Portable.Down
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 5 0 0
+Task 3: Lock the keypad against accidental presses: hold LOCK for one second.
+_text_end
+
+move_and_press VHF_Portable.LOCK
+delay 0 0 1.5
+release
+delay 0 0 2
+
+msg 5 0 0
+KEY in the display: the keypad is locked. Hold LOCK again to unlock it.
+_text_end
+
+delay 0 0 3
+
+exit

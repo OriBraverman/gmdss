@@ -1,0 +1,24 @@
+NGMDSS training station
+.-VHF RT2048 and DSC
+*--VHF DSC distress alert|vhf_dsc.hlp|Cdc
+*--VHF DSC individual call to a coast station|vhf_dsc.hlp|Sc
+.-MF/HF RE2100 and DSC
+*--MF DSC distress alert on 2187.5 kHz|hf_dsc.hlp|Wc
+*--Testing the radiotelephone alarm generator
+.-HF radiotelex
+*--Checking for traffic by radiotelex|hf_tlx.hlp|First
+.-NAVTEX NT-900
+*--Excluding a NAVTEX message type|navtex.hlp|navtex
+.-Inmarsat-C
+*--Inmarsat-C login and logout
+*--Inmarsat-C distress alert
+.-Watch receiver R501
+*--Testing the 2182 kHz watch receiver|r501.hlp|501
+.-SART
+*--SART self test and activation|sart.hlp|sart
+.-EPIRB
+*--EPIRB test and manual activation|cospas.hlp|cospas
+.-Portable VHF
+*--Portable VHF: switch on, on-scene channel, keypad lock|sp3110.hlp|portvhf
+.-Power supply
+*--Battery charger in automatic mode|elec.hlp|battery

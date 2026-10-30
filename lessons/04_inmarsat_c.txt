@@ -1,0 +1,70 @@
+Inmarsat-C login and logout
+
+duration 240
+
+task 5 0 0
+Task 1: Switch on the Inmarsat-C transceiver.
+_text_end
+
+msg 4 0 0
+Open the Inmarsat-C terminal from the equipment list.
+_text_end
+
+move_and_press Inm
+delay 0 0 0.5
+release
+delay 0 0 1
+
+msg 5 0 0
+Press the On/Off key of the transceiver.
+_text_end
+
+move_and_press Inm.ON_OFF
+delay 0 0 0.3
+release
+delay 0 0 1
+
+task 6 0 0
+Task 2: Log in to the ocean region of your position.
+_text_end
+
+msg 7 0 0
+Choose the ocean region next to the Login button
+(Atlantic East in the Mediterranean), then press Login.
+_text_end
+
+move_and_press Inm.Login
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 7 0 0
+The terminal tunes to the NCS common channel and
+registers. The SYNC lamp lights when it is logged in.
+_text_end
+
+delay 0 0 15
+
+task 5 0 0
+Task 3: Look at the EGC messages received.
+_text_end
+
+move_and_press Inm.EGC
+delay 0 0 0.3
+release
+delay 0 0 4
+
+task 5 0 0
+Task 4: Log out before switching off.
+_text_end
+
+msg 6 0 0
+Press Logout. The network then knows that the ship
+can no longer be reached.
+_text_end
+
+move_and_press Inm.Logout
+delay 0 0 0.3
+release
+delay 0 0 3
+exit

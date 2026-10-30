@@ -1,0 +1,84 @@
+Excluding a NAVTEX message type
+
+duration 180
+
+task 5 0 0
+Task 1: Switch on the NAVTEX receiver.
+_text_end
+
+msg 4 0 0
+Open the NAVTEX receiver from the equipment list.
+_text_end
+
+move_and_press Navtex
+delay 0 0 0.5
+release
+delay 0 0 1
+
+msg 4 0 0
+Press POWER. The printer confirms that all data was retained.
+_text_end
+
+move_and_press POWER
+delay 0 0 0.3
+release
+delay 0 0 1.5
+
+task 6 0 0
+Task 2: Stop the printing of ice reports (message type C).
+_text_end
+
+msg 6 0 0
+Press MENU twice: the first menu selects stations,
+the second one message types.
+_text_end
+
+move_and_press MENU
+delay 0 0 0.3
+release
+delay 0 0 1
+
+move_and_press MENU
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 6 0 0
+Scroll with MONITOR (up) to type C: A, B, C.
+Each step is printed on the paper.
+_text_end
+
+move_and_press Up
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+move_and_press Up
+delay 0 0 0.3
+release
+delay 0 0 0.8
+
+move_and_press Up
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 6 0 0
+Press EXCLUDE. Types A, B, D and L cannot be excluded:
+they are always printed.
+_text_end
+
+move_and_press EXCLUDE
+delay 0 0 0.3
+release
+delay 0 0 1
+
+msg 4 0 0
+Leave the menu with LINE FEED.
+_text_end
+
+move_and_press LINE_FEED
+delay 0 0 0.3
+release
+delay 0 0 2
+exit

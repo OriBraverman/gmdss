@@ -1,0 +1,72 @@
+Checking for traffic by radiotelex
+
+duration 300
+
+task 5 0 0
+Task 1: Call a coast station by radiotelex.
+_text_end
+
+msg 4 0 0
+Open the radiotelex terminal from the equipment list.
+_text_end
+
+move_and_press HF_Tlx
+delay 0 0 0.5
+release
+delay 0 0 1
+
+msg 6 0 0
+Choose the coast station in the list (the first one will do)
+and press F1 to call it.
+_text_end
+
+goto_if_press HF_Tlx.Call Calling
+kbd F1 * * *
+<<Calling>>
+delay 0 0 1
+
+msg 8 0 0
+The terminal connects and the answerbacks are exchanged.
+Wait for the station to ask for a command.
+_text_end
+
+delay 0 0 20
+
+task 5 0 0
+Task 2: Ask the station whether it holds messages for you.
+_text_end
+
+msg 5 0 0
+Type MSG+ (the + ends a command).
+_text_end
+
+kbd 'M' * * *
+delay 0 0 0.3
+kbd 'S' * * *
+delay 0 0 0.3
+kbd 'G' * * *
+delay 0 0 0.3
+kbd '+' * * *
+delay 0 0 8
+
+task 5 0 0
+Task 3: End the connection.
+_text_end
+
+msg 5 0 0
+Type BRK+ to clear the connection
+(F9 breaks it off at once).
+_text_end
+
+goto_if_kbd F9 * * * Done
+goto_if_press HF_Tlx.Break Done
+kbd 'B' * * *
+delay 0 0 0.3
+kbd 'R' * * *
+delay 0 0 0.3
+kbd 'K' * * *
+delay 0 0 0.3
+kbd '+' * * *
+<<Done>>
+delay 0 0 5
+exit
