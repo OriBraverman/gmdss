@@ -168,6 +168,24 @@ impl Device {
         }
     }
 
+    /// The manuals of the device's units (help files), as their Help buttons open them on the original.
+    fn manuals(self) -> &'static [&'static str] {
+        match self {
+            Self::VhfDsc => &["vhf.hlp", "vhf_dsc.hlp"],
+            Self::MfHfDsc => &["hf.hlp", "hf_dsc.hlp"],
+            Self::Radiotelex => &["hf_tlx.hlp", "telex.hlp"],
+            Self::InmarsatA => &["inma.hlp"],
+            Self::InmarsatC => &["capsat.hlp", "capsat_s.hlp"],
+            Self::Navtex => &["navtex.hlp"],
+            Self::Epirb => &["cospas.hlp"],
+            Self::Sart => &["sart.hlp"],
+            Self::Portable => &["sp3110.hlp"],
+            Self::R501 => &["r501.hlp"],
+            Self::Power => &["elec.hlp"],
+            Self::Printer => &[],
+        }
+    }
+
     /// What lessons call the device and the units on it (the first is the device itself).
     fn lesson_names(self) -> &'static [&'static str] {
         match self {
@@ -461,6 +479,15 @@ impl App {
                     self.tab = Tab::Units;
                 }
             }
+            if !self.device.manuals().is_empty() {
+                ui.add_space(8.0);
+                ui.label(RichText::new("MANUALS").small().color(Color32::GRAY));
+                for file in self.device.manuals() {
+                    if ui.add(egui::Button::new(books_page::title_of(file.trim_end_matches(".hlp"))).min_size(egui::vec2(200.0, 22.0))).clicked() && self.books.open_file(file) {
+                        self.tab = Tab::Books;
+                    }
+                }
+            }
         });
         egui::Panel::bottom("log").default_size(110.0).resizable(true).frame(egui::Frame::new().fill(PANEL).inner_margin(6)).show(ui, |ui| {
             ui.label(RichText::new("RADIO LOG").small().color(Color32::GRAY));
@@ -474,8 +501,20 @@ impl App {
             Err(e) => {
                 ui.colored_label(Color32::LIGHT_RED, e);
             }
-            Ok(_) if self.tab == Tab::Books => self.books.show(ui),
-            Ok(_) if self.tab == Tab::Chart => self.chart.show(ui, &self.ship),
+            Ok(_) if self.tab == Tab::Books => {
+                self.books.show(ui);
+                if std::mem::take(&mut self.books.chart_request) {
+                    self.tab = Tab::Chart;
+                }
+            }
+            Ok(_) if self.tab == Tab::Chart => {
+                self.chart.show(ui, &self.ship);
+                if let Some((file, topic)) = self.chart.help_request.take() {
+                    if self.books.open_topic(&file, &topic) {
+                        self.tab = Tab::Books;
+                    }
+                }
+            }
             Ok(_) if self.tab == Tab::Tutor => self.tutor.show(ui, self.clock.secs()),
             Ok(_) if self.tab == Tab::Options => options_page::show_options(ui, &mut self.ship),
             Ok(_) if self.tab == Tab::Intercom => {

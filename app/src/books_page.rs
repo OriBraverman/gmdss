@@ -7,13 +7,16 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 
 pub struct Books {
-    shelf: crate::svg_art::Art,
     shelf_ref: crate::svg_art::Art,
+    /// The map of coast stations was taken from the shelf: show the chart.
+    pub chart_request: bool,
     files: Vec<(String, PathBuf)>,
     open: Option<(usize, HelpFile)>,
     topic: usize,
     /// Topics to go back to.
     back: Vec<usize>,
+    /// The open book is shown (else the shelves).
+    reading: bool,
     /// The open book's pictures, as they are drawn.
     textures: HashMap<usize, egui::TextureHandle>,
 }
@@ -32,9 +35,9 @@ impl Books {
             .collect();
         files.sort();
         Books {
-            shelf: crate::svg_art::Art::new("shelf", include_str!("../assets/panels/shelf.svg")),
+            chart_request: false,
             shelf_ref: crate::svg_art::Art::new("shelf_reference", include_str!("../assets/panels/shelf_reference.svg")),
-            files, open: None, topic: 0, back: vec![], textures: HashMap::new() }
+            files, open: None, reading: false, topic: 0, back: vec![], textures: HashMap::new() }
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui) {
@@ -42,83 +45,111 @@ impl Books {
             ui.label("No help files found (expected the original 'help' folder next to 'data').");
             return;
         }
-        // The reference books stand on one shelf as on the original's; the equipment manuals on the
-        // shelves below, twelve to a shelf. Click one to open it.
+        if self.reading && self.open.is_some() {
+            self.reader(ui);
+        } else {
+            self.shelves(ui);
+        }
+    }
+
+    /// The shelf, as on the original (SHELF.CPP): the reference books, the map of coast stations
+    /// (which opens the chart), the self-education book; the equipment manuals open from their
+    /// devices. Click a book to read it.
+    fn shelves(&mut self, ui: &mut egui::Ui) {
         let find = |name: &str| self.files.iter().position(|(n, _)| n.eq_ignore_ascii_case(name));
         let opened = self.open.as_ref().map(|o| o.0);
+        let width = ui.available_width().min((ui.available_height() - 30.0).max(200.0) * 613.0 / 390.0);
         let mut clicked = None;
-        {
-            let p = Plate::with_art(ui, "Books", &mut self.shelf_ref, 760.0);
+        ui.vertical_centered(|ui| {
+            ui.set_width(width);
+            let p = Plate::with_art(ui, "Books", &mut self.shelf_ref, width);
             for (k, file) in REFERENCE.iter().enumerate() {
-                let Some(i) = find(file) else { continue };
                 let (clicked_now, r) = p.spot(ui, &format!("book-{k}"), self.shelf_ref.rect(&format!("book-{k}")));
-                if opened == Some(i) {
+                let r = r.on_hover_text(if *file == "Chart" { "Map of coast stations: the chart" } else { title_of(file) });
+                let i = find(file);
+                if i.is_some() && opened == i {
                     ui.painter().rect_stroke(r.rect, 2.0, egui::Stroke::new(2.5, crate::panel::YELLOW), egui::StrokeKind::Outside);
                 }
                 if clicked_now {
-                    clicked = Some(i);
+                    if *file == "Chart" {
+                        self.chart_request = true;
+                    } else {
+                        clicked = i;
+                    }
                 }
             }
-        }
-        let manuals: Vec<usize> = (0..self.files.len()).filter(|&i| !REFERENCE.iter().any(|b| self.files[i].0.eq_ignore_ascii_case(b))).collect();
-        for chunk in manuals.chunks(PER_SHELF) {
-            let p = Plate::with_art(ui, "Books", &mut self.shelf, 760.0);
-            let space = p.place(self.shelf.rect("space"));
-            let w = space.width() / PER_SHELF as f32;
-            for (k, &i) in chunk.iter().enumerate() {
-                let h = space.height() * (0.82 + 0.06 * ((i * 7) % 4) as f32 / 3.0);
-                let lift = if opened == Some(i) { 6.0 } else { 0.0 };
-                let r = egui::Rect::from_min_size(egui::pos2(space.left() + w * k as f32 + 1.0, space.bottom() - h - lift), egui::vec2(w - 2.0, h));
-                manual(ui.painter(), r, MANUAL_COLOURS[i % MANUAL_COLOURS.len()], &self.files[i].0);
-                if p.spot(ui, &self.files[i].0, r.translate(-p.rect.min.to_vec2()) / (p.rect.width() / 613.0)).0 {
-                    clicked = Some(i);
-                }
-            }
-        }
+            ui.label(RichText::new("The equipment manuals open with the Manual buttons of each device.").small().color(Color32::GRAY));
+        });
         if let Some(i) = clicked {
+            if opened != Some(i) {
+                self.load(i);
+            }
+            self.reading = true;
+        }
+    }
+
+    /// Opens help file `file` (e.g. `vhf.hlp`) at its contents, for a device's Manual button.
+    pub fn open_file(&mut self, file: &str) -> bool {
+        let stem = file.split('.').next().unwrap_or(file);
+        let Some(i) = self.files.iter().position(|(n, _)| n.eq_ignore_ascii_case(stem)) else { return false };
+        if self.open.as_ref().is_none_or(|o| o.0 != i) {
             self.load(i);
         }
-        ui.add_space(8.0);
+        self.topic = 0;
+        self.reading = true;
+        true
+    }
+
+    /// An open book: its topics on the left, the page on the right, the whole height of the page.
+    fn reader(&mut self, ui: &mut egui::Ui) {
+        let Some((i, h)) = &self.open else { return };
+        let mut go = None;
+        let mut close = false;
+        ui.horizontal(|ui| {
+            if ui.button("\u{25c0} Shelf").clicked() {
+                close = true;
+            }
+            ui.label(RichText::new(title_of(&self.files[*i].0)).size(17.0).strong().color(Color32::from_rgb(235, 220, 160)));
+            ui.add_space(16.0);
+            if ui.add_enabled(!self.back.is_empty(), egui::Button::new("Back")).clicked() {
+                self.topic = self.back.pop().unwrap();
+            }
+            if ui.button("Contents").clicked() {
+                go = Some(0);
+            }
+        });
+        ui.add_space(6.0);
+        let height = (ui.available_height() - 8.0).max(200.0);
         ui.horizontal_top(|ui| {
-            let Some((_, h)) = &self.open else {
-                ui.label("Choose a book.");
-                return;
-            };
-            let mut go = None;
             ui.vertical(|ui| {
-                ui.set_width(230.0);
-                ui.horizontal(|ui| {
-                    if ui.add_enabled(!self.back.is_empty(), egui::Button::new("< Back")).clicked() {
-                        self.topic = self.back.pop().unwrap();
-                    }
-                    if ui.button("Contents").clicked() {
-                        go = Some(0);
-                    }
-                });
+                ui.set_width(250.0);
                 ui.label(RichText::new("TOPICS").small().color(Color32::GRAY));
-                egui::ScrollArea::vertical().id_salt("topics").max_height(540.0).show(ui, |ui| {
-                    for (i, t) in h.topics.iter().enumerate() {
-                        let title: String = t.title.chars().take(34).collect();
-                        if ui.selectable_label(self.topic == i, title).clicked() {
-                            go = Some(i);
+                egui::ScrollArea::vertical().id_salt("topics").max_height(height - 20.0).auto_shrink([false, false]).show(ui, |ui| {
+                    for (k, t) in h.topics.iter().enumerate() {
+                        let title: String = t.title.chars().take(36).collect();
+                        if ui.selectable_label(self.topic == k, title).clicked() {
+                            go = Some(k);
                         }
                     }
                 });
             });
             if let Some(t) = h.topics.get(self.topic) {
-                egui::Frame::new().fill(PAPER).inner_margin(12).show(ui, |ui| {
-                    egui::ScrollArea::both().id_salt(("text", self.topic)).max_height(560.0).auto_shrink([false, false]).show(ui, |ui| {
+                egui::Frame::new().fill(PAPER).inner_margin(12).corner_radius(3).show(ui, |ui| {
+                    egui::ScrollArea::both().id_salt(("text", self.topic)).max_height(height - 24.0).auto_shrink([false, false]).show(ui, |ui| {
                         if let Some(l) = page(ui, h, t, &mut self.textures) {
                             go = Some(l);
                         }
                     });
                 });
             }
-            if let Some(i) = go.filter(|&i| i != self.topic) {
-                self.back.push(self.topic);
-                self.topic = i;
-            }
         });
+        if close {
+            self.reading = false;
+        }
+        if let Some(k) = go.filter(|&k| k != self.topic) {
+            self.back.push(self.topic);
+            self.topic = k;
+        }
     }
 
     fn load(&mut self, i: usize) {
@@ -138,35 +169,46 @@ impl Books {
         }
         let Some(t) = self.open.as_ref().and_then(|(_, h)| h.named(topic)) else { return false };
         self.topic = t;
+        self.reading = true;
         true
     }
 }
 
 const PAPER: Color32 = Color32::from_rgb(245, 243, 230);
-const PER_SHELF: usize = 12;
-const MANUAL_COLOURS: [Color32; 6] = [
-    Color32::from_rgb(28, 70, 40),
-    Color32::from_rgb(30, 60, 140),
-    Color32::from_rgb(214, 110, 40),
-    Color32::from_rgb(40, 120, 80),
-    Color32::from_rgb(25, 40, 100),
-    Color32::from_rgb(120, 30, 30),
-];
-
-/// An equipment manual on a lower shelf: a plain spine with gold rules and its name.
-fn manual(painter: &egui::Painter, r: egui::Rect, c: Color32, name: &str) {
-    painter.rect_filled(r, 2.0, c);
-    painter.rect_filled(r.shrink2(egui::vec2(0.0, 6.0)).with_max_x(r.left() + 3.0), 0.0, Color32::from_white_alpha(25));
-    for y in [r.top() + 8.0, r.bottom() - 10.0] {
-        painter.hline(r.x_range(), y, egui::Stroke::new(1.5, Color32::from_rgb(210, 180, 60)));
-    }
-    let galley = painter.layout_no_wrap(name.to_string(), egui::FontId::proportional((r.width() * 0.42).min(15.0)), Color32::from_rgb(235, 220, 160));
-    let pos = egui::pos2(r.center().x - galley.size().y / 2.0, r.center().y + galley.size().x / 2.0);
-    painter.add(egui::epaint::TextShape::new(pos, galley, Color32::WHITE).with_angle(-std::f32::consts::FRAC_PI_2));
+/// What each help file is, for the reader and the Manual buttons.
+pub fn title_of(stem: &str) -> &str {
+    const TITLES: [(&str, &str); 24] = [
+        ("GMDSS", "GMDSS Handbook"),
+        ("COAST_RS", "Map of coast stations"),
+        ("CALLSIGN", "List of call signs and numerical identities (VIIA)"),
+        ("SERVICE", "List of radiodetermination and special service stations (VI)"),
+        ("SHIPS", "List of ship stations (V)"),
+        ("COAST", "List of coast stations (IV)"),
+        ("TUTOR", "Self education"),
+        ("CAPSAT", "Inmarsat-C ship earth station"),
+        ("CAPSAT_S", "Inmarsat-C message terminal"),
+        ("COSPAS", "EPIRBs (COSPAS-SARSAT)"),
+        ("ELEC", "Batteries and power supply"),
+        ("HF", "HF SSB RE2100"),
+        ("HF_DSC", "MF/HF DSC RM2150"),
+        ("HF_TLX", "DSC / telex RM2151"),
+        ("INMA", "Inmarsat-A JUE-45"),
+        ("INMARSAT", "Inmarsat earth stations"),
+        ("NAVTEX", "NAVTEX receiver NT-900"),
+        ("NVTX_RS", "NAVTEX stations"),
+        ("R501", "Watch receiver R501"),
+        ("SART", "SART"),
+        ("SP3110", "Portable VHF SP3110"),
+        ("TELEX", "Radiotelex"),
+        ("VHF", "VHF RT2048"),
+        ("VHF_DSC", "VHF DSC RM2042"),
+    ];
+    TITLES.iter().find(|(f, _)| f.eq_ignore_ascii_case(stem)).map_or(stem, |(_, t)| t)
 }
 
-/// The help file of each book on the reference shelf (`book-0` .. `book-7` in its artwork).
-const REFERENCE: [&str; 8] = ["GMDSS", "COAST_RS", "CALLSIGN", "SERVICE", "SHIPS", "SHIPS", "COAST", "TUTOR"];
+/// The help file of each book on the shelf (`book-0` .. `book-7` in its artwork); the map of
+/// coast stations is the chart, as on the original.
+const REFERENCE: [&str; 8] = ["GMDSS", "Chart", "CALLSIGN", "SERVICE", "SHIPS", "SHIPS", "COAST", "TUTOR"];
 
 /// One help topic as the original lays it out: a character grid (tabs every 8 columns) with the
 /// links in it and the pictures drawn over it, one picture pixel to an eighth of a character.
@@ -247,14 +289,15 @@ mod tests {
             return;
         }
         let mut books = super::Books::new(Some(dir.clone()));
-        crate::snapshot::render("books", eframe::egui::vec2(780.0, 560.0), |ui| books.show(ui));
-        // Topics with links and pictures: the HF keys, a SART manual page, a lesson's topic.
+        crate::snapshot::render("books", eframe::egui::vec2(940.0, 620.0), |ui| books.show(ui));
+        // Topics with links and pictures, in the reader.
         for (file, topic, name) in [("hf.hlp", "-", "books_hf"), ("sart.hlp", "1b", "books_sart"), ("vhf_dsc.hlp", "Cdc", "books_cdc")] {
             let mut books = super::Books::new(Some(dir.clone())); // each snapshot has its own egui context
             if !books.open_topic(file, topic) {
+                books.open_file(file);
                 books.topic = 9;
             }
-            crate::snapshot::render(name, eframe::egui::vec2(1000.0, 1300.0), |ui| books.show(ui));
+            crate::snapshot::render(name, eframe::egui::vec2(940.0, 620.0), |ui| books.show(ui));
         }
     }
 }

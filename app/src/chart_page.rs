@@ -1,5 +1,7 @@
 //! Chart: land (Natural Earth 1:50m, public domain), own ship, coast radio / NAVTEX / earth
-//! stations, ranges. Mercator, drag to pan, scroll to zoom, click a station for distance and bearing.
+//! stations, ranges, other vessels (added and edited here, as the original's vessel list).
+//! Mercator; drag to pan, scroll to zoom, click a station or vessel for distance and bearing,
+//! drag with the right button to measure.
 
 use crate::Ship;
 use eframe::egui::{self, Align2, Color32, FontId, Pos2, Sense, Stroke, Vec2};
@@ -15,6 +17,20 @@ pub struct Chart {
     land: Vec<Ring>,
     /// The land drawn for the view it was drawn for (centre, scale, size).
     land_image: Option<((f64, f64, f64, [usize; 2]), egui::TextureHandle)>,
+    pub vessels: Vec<Vessel>,
+    /// A station's page was asked for: (help file, topic), for the Books page.
+    pub help_request: Option<(String, String)>,
+    selected_vessel: Option<usize>,
+    /// The last measurement: from, to (lat, lon degrees).
+    measure: Option<((f64, f64), (f64, f64))>,
+}
+
+/// Another vessel on the chart (degrees north, east).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Vessel {
+    pub name: String,
+    pub lat: f64,
+    pub lon: f64,
 }
 
 /// A land outline or a hole in one (lon, lat degrees) and its bounding box.
@@ -113,14 +129,51 @@ pub fn distance_bearing(a: (f64, f64), b: (f64, f64)) -> (f64, f64) {
 
 impl Chart {
     pub fn new(stations: Vec<Station>, ship: &Ship) -> Chart {
-        Chart { stations, centre: (f64::from(ship.lon_min) / 60.0, f64::from(ship.lat_min) / 60.0), scale: 12.0, selected: None, land: land(), land_image: None }
+        Chart { stations, centre: (f64::from(ship.lon_min) / 60.0, f64::from(ship.lat_min) / 60.0), scale: 12.0, selected: None, land: land(), land_image: None, vessels: vec![], selected_vessel: None, measure: None, help_request: None }
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui, ship: &Ship) {
+        ui.horizontal_top(|ui| {
+            let w = (ui.available_width() - 240.0).max(300.0);
+            ui.allocate_ui_with_layout(Vec2::new(w, ui.available_height()), egui::Layout::top_down(egui::Align::Min), |ui| self.chart(ui, ship));
+            ui.vertical(|ui| self.vessel_list(ui));
+        });
+    }
+
+    /// The vessel list beside the chart: add, edit, delete.
+    fn vessel_list(&mut self, ui: &mut egui::Ui) {
+        ui.label(egui::RichText::new("VESSELS").small().color(Color32::GRAY));
+        let mut delete = None;
+        for (i, v) in self.vessels.iter_mut().enumerate() {
+            egui::Frame::new().fill(if self.selected_vessel == Some(i) { Color32::from_rgb(40, 60, 80) } else { Color32::TRANSPARENT }).inner_margin(4).show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.add(egui::TextEdit::singleline(&mut v.name).desired_width(130.0));
+                    if ui.small_button("Delete").clicked() {
+                        delete = Some(i);
+                    }
+                });
+                ui.horizontal(|ui| {
+                    ui.add(egui::DragValue::new(&mut v.lat).range(-85.0..=85.0).speed(0.01).fixed_decimals(2).suffix("\u{b0}N"));
+                    ui.add(egui::DragValue::new(&mut v.lon).range(-180.0..=180.0).speed(0.01).fixed_decimals(2).suffix("\u{b0}E"));
+                });
+            });
+        }
+        if let Some(i) = delete {
+            self.vessels.remove(i);
+            self.selected_vessel = None;
+        }
+        if ui.button("Add a vessel at the chart centre").clicked() {
+            self.vessels.push(Vessel { name: format!("VESSEL {}", self.vessels.len() + 1), lat: self.centre.1, lon: self.centre.0 });
+            self.selected_vessel = Some(self.vessels.len() - 1);
+            self.selected = None;
+        }
+    }
+
+    fn chart(&mut self, ui: &mut egui::Ui, ship: &Ship) {
         let (rect, resp) = ui.allocate_exact_size(ui.available_size() - Vec2::new(0.0, 40.0), Sense::click_and_drag());
         let p = ui.painter_at(rect);
         p.rect_filled(rect, 0.0, Color32::from_rgb(170, 200, 225));
-        if resp.dragged() {
+        if resp.dragged_by(egui::PointerButton::Primary) {
             let d = resp.drag_delta();
             self.centre.0 -= f64::from(d.x) / self.scale;
             let y = merc_y(self.centre.1) + f64::from(d.y) / self.scale;
@@ -225,10 +278,66 @@ impl Chart {
                 }
             }
         }
+        // Other vessels.
+        let mut nearest_vessel: Option<(usize, f32)> = None;
+        for (i, v) in self.vessels.iter().enumerate() {
+            let pos = to_screen(v.lat, v.lon);
+            let s = if self.selected_vessel == Some(i) { 9.0 } else { 7.0 };
+            let colour = Color32::from_rgb(20, 90, 40);
+            p.add(egui::Shape::convex_polygon(vec![pos + Vec2::new(0.0, -s), pos + Vec2::new(s * 0.7, s * 0.7), pos + Vec2::new(-s * 0.7, s * 0.7)], colour, Stroke::new(1.0, Color32::BLACK)));
+            p.text(pos + Vec2::new(8.0, 0.0), Align2::LEFT_CENTER, &v.name, FontId::proportional(11.0), colour);
+            if let Some(ptr) = pointer {
+                let d = ptr.distance(pos);
+                if d < 12.0 && nearest_vessel.is_none_or(|n| d < n.1) {
+                    nearest_vessel = Some((i, d));
+                }
+            }
+        }
+        // Measuring with the right button: a line with its distance and bearing.
+        let from_screen = |q: Pos2| -> (f64, f64) {
+            let lon = self.centre.0 + f64::from(q.x - c.x) / self.scale;
+            (inv_merc_y(cy - f64::from(q.y - c.y) / self.scale), (lon + 540.0).rem_euclid(360.0) - 180.0)
+        };
+        if let Some(q) = resp.interact_pointer_pos() {
+            if resp.drag_started_by(egui::PointerButton::Secondary) {
+                self.measure = Some((from_screen(q), from_screen(q)));
+            } else if resp.dragged_by(egui::PointerButton::Secondary) {
+                if let Some(m) = &mut self.measure {
+                    m.1 = from_screen(q);
+                }
+            }
+        }
+        if let Some((a, b)) = self.measure {
+            let (pa, pb) = (to_screen(a.0, a.1), to_screen(b.0, b.1));
+            p.line_segment([pa, pb], Stroke::new(1.5, Color32::from_rgb(160, 20, 20)));
+            let (d, brg) = distance_bearing(a, b);
+            p.text(pb + Vec2::new(6.0, -6.0), Align2::LEFT_BOTTOM, format!("{d:.1} nm  {brg:03.0}\u{b0}"), FontId::proportional(12.0), Color32::from_rgb(160, 20, 20));
+        }
         if resp.clicked() {
-            self.selected = nearest.map(|n| n.0);
+            match (nearest, nearest_vessel) {
+                (_, Some(v)) if nearest.is_none_or(|s| v.1 <= s.1) => (self.selected, self.selected_vessel) = (None, Some(v.0)),
+                (s, _) => (self.selected, self.selected_vessel) = (s.map(|n| n.0), None),
+            }
         }
         // Info line.
+        if let Some(v) = self.selected_vessel.and_then(|i| self.vessels.get(i)) {
+            let (d, b) = distance_bearing(ship_pos, (v.lat, v.lon));
+            ui.label(format!("{} (vessel): {} {}  -  {d:.0} nm, bearing {b:03.0}\u{b0} from {}", v.name, fmt_lat((v.lat * 60.0) as f32), fmt_lon((v.lon * 60.0) as f32), ship.name));
+            return;
+        }
+        // Each station has its page in the station books (by id), as on the original.
+        if let Some(s) = self.selected.and_then(|i| self.stations.get(i)) {
+            let file = match s.kind {
+                Kind::CoastRadio => "coast_rs.hlp",
+                Kind::Navtex => "nvtx_rs.hlp",
+                Kind::EarthStation => "inmarsat.hlp",
+            };
+            let mut open = false;
+            ui.horizontal(|ui| open = ui.button("Station details").clicked());
+            if open {
+                self.help_request = Some((file.into(), s.id.clone()));
+            }
+        }
         let info = match self.selected.and_then(|i| self.stations.get(i)) {
             Some(s) => {
                 let (d, b) = distance_bearing(ship_pos, (f64::from(s.lat_min) / 60.0, f64::from(s.lon_min) / 60.0));
@@ -239,7 +348,7 @@ impl Chart {
                 };
                 format!("{} ({kind}, id {}): {} {}  -  {d:.0} nm, bearing {b:03.0}\u{b0} from {}", s.name, s.id, fmt_lat(s.lat_min), fmt_lon(s.lon_min), ship.name)
             }
-            None => format!("Own ship {} {} {}  -  drag to pan, scroll to zoom, click a station", ship.name, fmt_lat(ship.lat_min as f32), fmt_lon(ship.lon_min as f32)),
+            None => format!("Own ship {} {} {}  -  drag to pan, scroll to zoom, click a station or vessel, right-drag to measure", ship.name, fmt_lat(ship.lat_min as f32), fmt_lon(ship.lon_min as f32)),
         };
         ui.label(info);
     }
@@ -266,6 +375,19 @@ mod tests {
         assert!((d - 60.0).abs() < 0.01 && b.abs() < 0.01);
         let (_, b) = super::distance_bearing((0.0, 0.0), (0.0, 1.0));
         assert!((b - 90.0).abs() < 0.01);
+    }
+
+    /// A vessel and a measurement on the chart, with the vessel list beside it.
+    #[test]
+    fn vessels_and_measuring() {
+        let ship = crate::default_ship();
+        let mut c = super::Chart::new(vec![], &ship);
+        c.vessels.push(super::Vessel { name: "RESCUER".into(), lat: 33.2, lon: 34.2 });
+        c.measure = Some(((32.92, 34.67), (33.2, 34.2)));
+        c.scale = 60.0;
+        crate::snapshot::render("chart_vessels", eframe::egui::vec2(940.0, 600.0), |ui| c.show(ui, &ship));
+        let (d, b) = super::distance_bearing((32.92, 34.67), (33.2, 34.2));
+        assert!((25.0..35.0).contains(&d) && (290.0..330.0).contains(&b), "{d} {b}");
     }
 
     /// The whole world at 2 pixels per degree, centred on 0/0: land where land is, also across

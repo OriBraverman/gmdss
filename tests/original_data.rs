@@ -227,3 +227,18 @@ fn ether_tables() {
     assert!(heard(2187.5, 4.0, 400.0) && !heard(2187.5, 12.0, 400.0));
     assert!(heard(8414.5, 3.0, 4000.0) && !heard(8414.5, 15.0, 4000.0));
 }
+
+/// Chart stations and the station books: each station's id names its page (coast radio stations in
+/// COAST_RS, NAVTEX in NVTX_RS, earth stations in INMARSAT).
+#[test]
+fn station_pages() {
+    let Some(dir) = data_dir() else { return };
+    let stations = gmdss::coast_rs::parse(&std::fs::read(dir.join("../chart/COAST_RS.DAT")).unwrap()).unwrap();
+    let help = dir.join("../help");
+    for (kind, file) in [(gmdss::coast_rs::Kind::CoastRadio, "COAST_RS.HLP"), (gmdss::coast_rs::Kind::Navtex, "NVTX_RS.HLP"), (gmdss::coast_rs::Kind::EarthStation, "INMARSAT.HLP")] {
+        let h = gmdss::help::parse(&read(&help, file)).unwrap();
+        let of_kind: Vec<_> = stations.iter().filter(|s| s.kind == kind).collect();
+        let found = of_kind.iter().filter(|s| h.named(&s.id).is_some()).count();
+        assert!(!of_kind.is_empty() && found == of_kind.len(), "{file}: {found} of {}", of_kind.len());
+    }
+}
