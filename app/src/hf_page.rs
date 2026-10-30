@@ -14,13 +14,15 @@ pub struct HfStation {
     dsc_vol: u8,
     art: crate::svg_art::Art,
     dsc_art: crate::svg_art::Art,
+    /// The radiotelex station's DSC / telex unit.
+    rm2151_art: crate::svg_art::Art,
 }
 
 impl HfStation {
     pub fn new(ship: &Ship) -> HfStation {
         let mut dsc = Controller::new(&ship.mmsi, Band::MfHf);
         dsc.position = Some(Position { lat_min: ship.lat_min, lon_min: ship.lon_min });
-        HfStation { art: crate::svg_art::Art::new("hf_re2100", include_str!("../assets/panels/hf_re2100.svg")), hf: HfRadio::default(), vol: 0, dsc, dsc_vol: 0, dsc_art: dsc_panel::art("hf_dsc", "MF/HF DSC RM2151") }
+        HfStation { art: crate::svg_art::Art::new("hf_re2100", include_str!("../assets/panels/hf_re2100.svg")), hf: HfRadio::default(), vol: 0, dsc, dsc_vol: 0, dsc_art: dsc_panel::art("hf_dsc", "MF/HF DSC RM2150"), rm2151_art: dsc_panel::art("hf_tlx_dsc", "MF/HF DSC / TELEX RM2151") }
     }
 
     /// Applies the ship's identity and position (Options may change them).
@@ -89,6 +91,14 @@ impl HfStation {
         self.hf.ptt = ptt.is_pointer_button_down_on() && self.hf.on;
         ui.add_space(6.0);
         let out = dsc_panel::show(ui, "HF_DSC", &mut self.dsc_art, &mut self.dsc, &mut self.dsc_vol, w);
+        self.transmit(out, clock, shared);
+    }
+
+    /// The radiotelex station's DSC / telex unit RM2151 (lesson scope `HF_Tlx`).
+    /// ponytail: it drives the same DSC controller as the RM2150; a second controller if lessons
+    /// ever need the two apart.
+    pub fn show_rm2151(&mut self, ui: &mut egui::Ui, clock: &SimClock, shared: &mut Shared) {
+        let out = dsc_panel::show(ui, "HF_Tlx", &mut self.rm2151_art, &mut self.dsc, &mut self.dsc_vol, 420.0);
         self.transmit(out, clock, shared);
     }
 

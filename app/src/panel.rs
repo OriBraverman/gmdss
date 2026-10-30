@@ -30,10 +30,25 @@ pub fn bus<R>(ctx: &egui::Context, f: impl FnOnce(&mut Bus) -> R) -> R {
     ctx.data_mut(|d| f(d.get_temp_mut_or_default::<Bus>(egui::Id::new("lesson_bus"))))
 }
 
+/// Names the original's lessons use for controls that are called otherwise here:
+/// (scope, original name, name here).
+const ALIASES: [(&str, &str, &str); 8] = [
+    ("VHF", "Power", "VOL_OFF"),
+    ("R_501", "OFF", "AF_GAIN"),
+    ("SART", "Key", "TEST"),
+    ("SART", "OFF", "switch"),
+    ("SART", "ON", "switch"),
+    ("Navtex", "Monitor", "Up"),
+    ("Navtex", "Dimmer", "Down"),
+    ("Inmarsat_A", "On_Off", "POWER"),
+];
+
 /// Whether lesson name `want` means control `scope.name` now. ponytail: a name without scope must
 /// match the selected device in the first frame, any device after that.
 fn means(b: &Bus, want: &str, scope: &str, name: &str) -> bool {
-    gmdss::script::names(want, &format!("{scope}.{name}")) && (want.contains('.') || b.press_age > 0 || b.scope.eq_ignore_ascii_case(scope))
+    let named = gmdss::script::names(want, &format!("{scope}.{name}"))
+        || ALIASES.iter().any(|&(s, alias, n)| s == scope && n == name && gmdss::script::names(want, &format!("{s}.{alias}")));
+    named && (want.contains('.') || b.press_age > 0 || b.scope.eq_ignore_ascii_case(scope))
 }
 
 /// Lesson hooks for one control: draws the demonstration ring, reports a student click, and

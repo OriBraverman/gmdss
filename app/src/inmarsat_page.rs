@@ -152,7 +152,7 @@ impl Inmarsat {
                 }
             });
             ui.add_space(12.0);
-            if ui.add(egui::Button::new(RichText::new("POWER").color(if self.ses.on { GREEN } else { Color32::GRAY })).min_size(Vec2::new(70.0, 34.0))).clicked() {
+            if crate::panel::hook(&ui.add(egui::Button::new(RichText::new("POWER").color(if self.ses.on { GREEN } else { Color32::GRAY })).min_size(Vec2::new(70.0, 34.0))), "Inmarsat_A", "POWER") {
                 self.ses.on = !self.ses.on;
                 if self.ses.on {
                     self.ses.screen.push_str("JUE-45 READY\n");
@@ -375,7 +375,8 @@ impl Inmarsat {
                 }
             }
             ui.separator();
-            ui.label(RichText::new(format!("Status:   {}", self.term.status)).monospace().color(Color32::from_rgb(200, 220, 255)));
+            // The terminal computer is always on here; the original's lessons switch it on (`Power`).
+            crate::panel::hook(&ui.label(RichText::new(format!("Status:   {}", self.term.status)).monospace().color(Color32::from_rgb(200, 220, 255))), "Inm_Mon", "Power");
         });
     }
 

@@ -82,6 +82,13 @@ impl Tutor {
         Tutor { index: script::parse_index(INDEX), lessons, run: None, results: vec![], missing: vec![], help_request: None }
     }
 
+    /// Adds a lesson (tests: the original's lessons, when present locally); returns its number.
+    #[cfg(test)]
+    pub fn push_lesson(&mut self, s: Script) -> usize {
+        self.lessons.push(s);
+        self.lessons.len() - 1
+    }
+
     /// Starts lesson `i` (in `LESSONS` order).
     pub fn start(&mut self, ctx: &egui::Context, i: usize, mode: Mode, now: f64) {
         let help = self.index.iter().find(|e| e.title == self.lessons[i].title).and_then(|e| e.help.clone());

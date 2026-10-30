@@ -165,9 +165,10 @@ impl Device {
         match self {
             Self::VhfDsc => &["VHF", "VHF_DSC"],
             Self::MfHfDsc => &["HF", "HF_DSC"],
-            Self::Radiotelex => &["HF_Tlx"],
+            // The original's radiotelex station: DSC / telex unit RM2151, telex modem, terminal.
+            Self::Radiotelex => &["HF_Tlx", "Msg_Tlx", "Tlx_Mon"],
             Self::InmarsatA => &["Inmarsat_A"],
-            Self::InmarsatC => &["Inm"],
+            Self::InmarsatC => &["Inm", "InmMsg", "Inm_Mon"],
             Self::Navtex => &["Navtex"],
             Self::Epirb => &["EPIRB"],
             Self::Sart => &["SART"],
@@ -424,7 +425,9 @@ impl App {
         egui::Panel::top("tabs").frame(egui::Frame::new().fill(PANEL).inner_margin(6)).show(ui, |ui| {
             ui.horizontal(|ui| {
                 for (label, tab) in [("Units View", Tab::Units), ("Chart", Tab::Chart), ("Tutor", Tab::Tutor), ("Books", Tab::Books), ("Options", Tab::Options), ("Intercom", Tab::Intercom)] {
-                    if ui.add(egui::Button::new(label).selected(tab == self.tab).min_size(egui::vec2(110.0, 26.0))).clicked() {
+                    let resp = ui.add(egui::Button::new(label).selected(tab == self.tab).min_size(egui::vec2(110.0, 26.0)));
+                    // The original's lessons go back to the console with `Icon`.
+                    if resp.clicked() || (tab == Tab::Units && panel::hook(&resp, "Console", "Icon")) {
                         self.tab = tab;
                     }
                 }
@@ -476,7 +479,11 @@ impl App {
                 }
             }
             Ok(data) => match self.device {
-                Device::Radiotelex => self.terminal.show(ui, data.stations, &self.ship, &self.clock),
+                Device::Radiotelex => {
+                    self.hf.show_rm2151(ui, &self.clock, &mut self.shared);
+                    ui.add_space(6.0);
+                    self.terminal.show(ui, data.stations, &self.ship, &self.clock);
+                }
                 Device::VhfDsc => self.vhf.show(ui, &self.clock, &mut self.shared),
                 Device::MfHfDsc => self.hf.show(ui, &self.clock, &mut self.shared),
                 Device::InmarsatA => self.inmarsat.show_a(ui, &self.clock, &self.ship, &data.ces, &mut self.subs_a),
@@ -594,6 +601,61 @@ mod tests {
             };
             assert!(ok, "lesson {title:?} did not reach its result; log: {:?}", app.shared.log);
         }
+    }
+
+    /// Local diagnostic: the original's lessons (decrypted on this machine into `re/tue_plain`,
+    /// never part of the project) demonstrated on this console; prints what each one could not find.
+    /// `cargo test -p gmdss-app original_lessons -- --ignored --nocapture`
+    #[test]
+    #[ignore]
+    fn original_lessons() {
+        let data = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../_gmdss/data"));
+        let dir = PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../../re/tue_plain"));
+        let Ok(entries) = std::fs::read_dir(&dir) else { return };
+        let mut files: Vec<_> = entries.flatten().map(|e| e.path()).filter(|p| p.to_string_lossy().ends_with(".TUE.txt")).collect();
+        files.sort();
+        let (mut clean, mut total) = (0, 0);
+        let mut all_missing: std::collections::BTreeMap<String, usize> = Default::default();
+        for f in files {
+            let text = String::from_utf8_lossy(&std::fs::read(&f).unwrap()).into_owned();
+            let name = f.file_name().unwrap().to_string_lossy().into_owned();
+            let script = match gmdss::script::parse(&text) {
+                Ok(s) => s,
+                Err(e) => {
+                    println!("{name}: does not parse: {e:?}");
+                    continue;
+                }
+            };
+            total += 1;
+            let mut app = App::new(Some(data.clone()), None);
+            let ctx = egui::Context::default();
+            let i = app.tutor.push_lesson(script);
+            app.tutor.start(&ctx, i, gmdss::script::Mode::Demo, 0.0);
+            app.clock.speed = 10.0;
+            let mut t = 0.0;
+            let mut finished = false;
+            for _ in 0..20_000 {
+                t += 0.05;
+                let input = egui::RawInput { screen_rect: Some(egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(1180.0, 760.0))), time: Some(t), ..Default::default() };
+                let mut out = ctx.run_ui(input, |ui| app.frame(ui));
+                out.textures_delta.clear();
+                if app.tutor.run.as_ref().is_some_and(|r| r.finished()) {
+                    finished = true;
+                    break;
+                }
+            }
+            let mut missing = app.tutor.missing.clone();
+            missing.sort();
+            missing.dedup();
+            for m in &missing {
+                *all_missing.entry(m.clone()).or_default() += 1;
+            }
+            if finished && missing.is_empty() {
+                clean += 1;
+            }
+            println!("{name}: {} missing {:?}", if finished { "finished" } else { "NOT finished" }, missing);
+        }
+        println!("{clean} of {total} parsed lessons ran clean; missing over all: {all_missing:?}");
     }
 
     /// Received Inmarsat-C messages print by themselves; Inmarsat-A screen text only with PRINT ON.
