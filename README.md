@@ -73,3 +73,9 @@ development package (`libasound2-dev`) to build.
 ```
 cargo test --workspace
 ```
+
+## License
+
+MIT (see `LICENSE`) for the code, artwork and lessons of this project. Bundled third-party data:
+DejaVu fonts (see `app/assets/fonts/LICENSE_DEJAVU.txt`) and Natural Earth land (public domain).
+The original program and its data are not part of this repository and are not covered by it.
