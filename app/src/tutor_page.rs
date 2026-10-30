@@ -1,6 +1,6 @@
 //! Tutor: lessons in the original tutor's script structure (`gmdss::script`). Demonstration plays
-//! the lesson on the equipment, practice lets the student do it with the messages shown, the exam
-//! is timed and shows only the tasks.
+//! the lesson on the equipment, lesson plays it one action at a time, practice lets the student do
+//! it with the messages shown, the exam is timed and shows only the tasks.
 
 use crate::panel::bus;
 use eframe::egui::{self, Color32, RichText};
@@ -366,7 +366,7 @@ impl Tutor {
         let typed = keys(ctx);
         self.record(now, &used, &typed);
         let Some(run) = &mut self.run else { return };
-        if run.player.mode == Mode::Demo || run.player.finished() {
+        if matches!(run.player.mode, Mode::Demo | Mode::Lesson) || run.player.finished() {
             return;
         }
         let mut inputs: Vec<Input> = used.into_iter().map(Input::Press).collect();
@@ -412,12 +412,13 @@ impl Tutor {
                 Out::Finished { completed, errors, secs } => {
                     let mode = match run.player.mode {
                         Mode::Demo => "demonstration",
+                        Mode::Lesson => "lesson",
                         Mode::Practice => "practice",
                         Mode::Exam => "exam",
                     };
                     let how = if completed { "completed" } else { "time is up" };
                     let ok = script::passed(run.player.mode, completed, errors, run.player.actions);
-                    let verdict = if run.player.mode == Mode::Demo { "" } else if ok { ", passed" } else { ", not passed" };
+                    let verdict = if matches!(run.player.mode, Mode::Demo | Mode::Lesson) { "" } else if ok { ", passed" } else { ", not passed" };
                     self.results.push(format!("{}: {mode} {how}, {errors} errors, {:.1} min{verdict}", run.player.title(), secs / 60.0));
                     if let Some(e) = run.examinee.and_then(|k| self.examinees.get_mut(k)) {
                         let r = e.rows.entry(run.player.title().to_string()).or_default();
@@ -446,14 +447,18 @@ impl Tutor {
     pub fn strip(&mut self, ui: &mut egui::Ui, now: f64) {
         let Some(run) = &mut self.run else { return };
         let mut stop = false;
+        let mut step = false;
         egui::Frame::new().fill(Color32::from_rgb(60, 50, 20)).inner_margin(6).show(ui, |ui| {
             ui.horizontal_wrapped(|ui| {
                 ui.label(RichText::new(run.player.title()).strong().color(Color32::from_rgb(255, 220, 120)));
                 if let Some(left) = run.player.time_left(now) {
                     ui.label(RichText::new(format!("{:02}:{:02}", left as u32 / 60, left as u32 % 60)).monospace().color(Color32::WHITE));
                 }
-                if run.player.mode != Mode::Demo {
+                if !matches!(run.player.mode, Mode::Demo | Mode::Lesson) {
                     ui.label(RichText::new(format!("errors {}", run.player.errors)).color(Color32::LIGHT_GRAY));
+                }
+                if run.player.at_step() && ui.button("Next step").clicked() {
+                    step = true;
                 }
                 let task = if run.player.finished() { "Finished - see the results on the Tutor page" } else { run.task.as_str() };
                 ui.label(RichText::new(task).color(Color32::WHITE));
@@ -482,6 +487,10 @@ impl Tutor {
         if stop {
             self.run = None;
             bus(ui.ctx(), |b| *b = Default::default());
+        }
+        if step {
+            let outs = self.run.as_mut().map(|r| r.player.next_step(now)).unwrap_or_default();
+            self.apply(ui.ctx(), outs);
         }
     }
 
@@ -569,7 +578,7 @@ impl Tutor {
             let Some(i) = self.lessons.iter().position(|l| l.title == e.title) else { continue };
             ui.horizontal(|ui| {
                 ui.label(RichText::new(&e.title).size(15.0));
-                for (label, mode) in [("Demonstration", Mode::Demo), ("Practice", Mode::Practice), ("Exam", Mode::Exam)] {
+                for (label, mode) in [("Demonstration", Mode::Demo), ("Lesson", Mode::Lesson), ("Practice", Mode::Practice), ("Exam", Mode::Exam)] {
                     if ui.button(label).clicked() {
                         start = Some((i, mode));
                     }

@@ -193,6 +193,9 @@ pub fn parse(text: &str) -> Result<Script, ParseError> {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Mode {
     Demo,
+    /// A demonstration that waits after each action until the student goes on (`next_step`),
+    /// as the original's lesson mode.
+    Lesson,
     Practice,
     Exam,
 }
@@ -230,6 +233,8 @@ enum Wait {
     Msg(f64),
     Press(Vec<String>),
     Key(Key),
+    /// Lesson mode: the student is to go on.
+    Step,
     Done,
 }
 
@@ -256,6 +261,8 @@ pub struct Player {
     pub errors: u32,
     /// The actions the student was asked for (presses and keys).
     pub actions: u32,
+    /// Lesson mode: a control was pressed; wait when it is released.
+    step_after_release: bool,
 }
 
 /// Whether a finished lesson is passed, as the original scores it (TUTOR.CPP): an exam with at
@@ -270,7 +277,7 @@ pub fn passed(mode: Mode, completed: bool, errors: u32, actions: u32) -> bool {
 
 impl Player {
     pub fn new(script: Script, mode: Mode, now: f64) -> Player {
-        Player { script, mode, pc: 0, wait: Wait::Run, started: now, deadline: None, in_init: false, pointed: String::new(), var: String::new(), passed: HashMap::new(), alternatives: vec![], timers: vec![], errors: 0, actions: 0 }
+        Player { script, mode, pc: 0, wait: Wait::Run, started: now, deadline: None, in_init: false, pointed: String::new(), var: String::new(), passed: HashMap::new(), alternatives: vec![], timers: vec![], errors: 0, actions: 0, step_after_release: false }
     }
 
     pub fn title(&self) -> &str {
@@ -287,7 +294,28 @@ impl Player {
     }
 
     fn student_acts(&self) -> bool {
-        self.mode != Mode::Demo && !self.in_init
+        !matches!(self.mode, Mode::Demo | Mode::Lesson) && !self.in_init
+    }
+
+    /// Lesson mode: waiting for the student to go on.
+    pub fn at_step(&self) -> bool {
+        self.wait == Wait::Step
+    }
+
+    /// Lesson mode: goes on to the next action.
+    pub fn next_step(&mut self, now: f64) -> Vec<Out> {
+        if self.wait != Wait::Step {
+            return vec![];
+        }
+        self.wait = Wait::Run;
+        self.tick(now)
+    }
+
+    /// Lesson mode, after a demonstrated action: wait for the student.
+    fn step_wait(&mut self) {
+        if self.mode == Mode::Lesson && !self.in_init {
+            self.wait = Wait::Step;
+        }
     }
 
     fn jump(&mut self, label: &str) {
@@ -355,7 +383,12 @@ impl Player {
                 self.press(x, student, out);
             }
             Cmd::MoveAndPress(x) => self.press(x, student, out),
-            Cmd::Release if !student => out.push(Out::Release),
+            Cmd::Release if !student => {
+                out.push(Out::Release);
+                if std::mem::take(&mut self.step_after_release) {
+                    self.step_wait();
+                }
+            }
             Cmd::Release | Cmd::MoveXy(..) | Cmd::Error => {}
             Cmd::Kbd(k) => {
                 if student {
@@ -363,6 +396,7 @@ impl Player {
                     self.wait = Wait::Key(k);
                 } else {
                     out.push(Out::Key(k));
+                    self.step_wait();
                 }
             }
             Cmd::Alt => {
@@ -372,6 +406,7 @@ impl Player {
                     self.wait = Wait::Key(k);
                 } else {
                     out.push(Out::Key(k));
+                    self.step_wait();
                 }
             }
             Cmd::Msg { secs, x, y, text, task } => {
@@ -434,6 +469,7 @@ impl Player {
             self.wait = Wait::Press(x.split('+').map(str::to_string).collect());
         } else {
             out.push(Out::Press(x));
+            self.step_after_release = self.mode == Mode::Lesson;
         }
     }
 
@@ -538,6 +574,18 @@ mod tests {
         assert_eq!(p.tick(2.0), [Out::CloseMsg, Out::Msg { text: "Press the red 16 key.".into(), x: 0, y: 0 }]);
         assert_eq!(p.tick(5.0), [Out::CloseMsg, Out::Press("VHF.16".into())]);
         assert_eq!(p.tick(5.3), [Out::Release, Out::Finished { completed: true, errors: 0, secs: 5.3 }]);
+    }
+
+    #[test]
+    fn lesson_waits_after_each_action() {
+        let mut p = Player::new(parse(LESSON).unwrap(), Mode::Lesson, 0.0);
+        p.tick(0.0);
+        p.tick(2.0);
+        assert_eq!(p.tick(5.0), [Out::CloseMsg, Out::Press("VHF.16".into())]);
+        assert_eq!(p.tick(5.3), [Out::Release]);
+        assert!(p.at_step());
+        assert_eq!(p.tick(60.0), []);
+        assert_eq!(p.next_step(61.0), [Out::Finished { completed: true, errors: 0, secs: 61.0 }]);
     }
 
     #[test]
