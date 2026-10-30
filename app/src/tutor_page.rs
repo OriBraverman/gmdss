@@ -52,6 +52,55 @@ pub struct Tutor {
     pub help_request: Option<(String, String)>,
     /// Lesson files from `load_dir` that could not be read.
     unreadable: Vec<String>,
+    /// A lesson being recorded from what the instructor does.
+    recording: Option<Recording>,
+    /// Where recorded lessons are saved.
+    pub record_dir: std::path::PathBuf,
+}
+
+/// A lesson written from what the instructor does, as the original's recorder (TU_WR_AC): before
+/// each action the time since the last one, then the control pressed or the key typed.
+pub struct Recording {
+    text: String,
+    last: f64,
+    actions: usize,
+}
+
+impl Recording {
+    fn add(&mut self, now: f64, line: &str) {
+        self.text.push_str(&format!("delay 0 0 {:.1}\n{line}\n", (now - self.last).max(0.0)));
+        self.last = now;
+        self.actions += 1;
+    }
+}
+
+/// The `kbd` line for a key.
+fn kbd_line(k: &Key) -> String {
+    let flag = |on: Option<bool>, name: &str| if on == Some(true) { name.to_string() } else { "*".into() };
+    let key = if k.key.chars().count() == 1 { format!("'{}'", k.key) } else { k.key.clone() };
+    // A typed character carries its own case: Shift is not part of it.
+    let shift = if k.key.chars().count() == 1 { None } else { k.shift };
+    format!("kbd {key} {} {} {}", flag(k.alt, "Alt"), flag(k.ctrl, "Ctrl"), flag(shift, "Shift"))
+}
+
+/// Keys typed this frame, as lessons name them.
+fn keys(ctx: &egui::Context) -> Vec<Key> {
+    let mut out = vec![];
+    ctx.input(|i| {
+        for e in &i.events {
+            match e {
+                egui::Event::Text(t) => out.extend(t.chars().map(|c| Key { key: c.to_string(), alt: Some(i.modifiers.alt), ctrl: Some(i.modifiers.ctrl), shift: Some(i.modifiers.shift) })),
+                egui::Event::Key { key, pressed: true, modifiers, .. } => {
+                    let name = lesson_key(*key);
+                    if name.chars().count() > 1 {
+                        out.push(Key { key: name, alt: Some(modifiers.alt), ctrl: Some(modifiers.ctrl), shift: Some(modifiers.shift) });
+                    }
+                }
+                _ => {}
+            }
+        }
+    });
+    out
 }
 
 /// Words of a lesson title, for matching index entries to lesson files.
@@ -86,7 +135,37 @@ fn lesson_key(key: egui::Key) -> String {
 impl Tutor {
     pub fn new() -> Tutor {
         let lessons = LESSONS.iter().map(|t| script::parse(t).expect("built-in lesson")).collect();
-        Tutor { index: script::parse_index(INDEX), lessons, run: None, results: vec![], missing: vec![], help_request: None, unreadable: vec![] }
+        Tutor { index: script::parse_index(INDEX), lessons, run: None, results: vec![], missing: vec![], help_request: None, unreadable: vec![], recording: None, record_dir: "recorded_lessons".into() }
+    }
+
+    /// While recording: the controls used and the keys typed this frame become lesson lines.
+    fn record(&mut self, now: f64, used: &[String], typed: &[Key]) {
+        let Some(rec) = &mut self.recording else { return };
+        for name in used {
+            rec.add(now, &format!("move_and_press {name}\ndelay 0 0 0.3\nrelease"));
+        }
+        for k in typed {
+            rec.add(now, &kbd_line(k));
+        }
+    }
+
+    /// Ends the recording: the lesson is saved in `record_dir` and listed under "Recorded lessons".
+    fn stop_recording(&mut self) {
+        let Some(rec) = self.recording.take() else { return };
+        let text = format!("{}exit\n", rec.text);
+        let _ = std::fs::create_dir_all(&self.record_dir);
+        let n = (1..).find(|n| !self.record_dir.join(format!("recorded_{n:02}.txt")).exists()).unwrap();
+        let path = self.record_dir.join(format!("recorded_{n:02}.txt"));
+        let title = format!("Recorded lesson {n:02}");
+        let text = text.replacen("Recorded lesson", &title, 1);
+        match std::fs::write(&path, &text).map_err(|e| e.to_string()).and_then(|_| script::parse(&text).map_err(|e| e.message)) {
+            Ok(s) => {
+                self.index.push(Entry { group: "Recorded lessons".into(), title: s.title.clone(), help: None });
+                self.lessons.push(s);
+                self.results.push(format!("{title}: {} actions saved to {}", rec.actions, path.display()));
+            }
+            Err(e) => self.unreadable.push(format!("{}: {e}", path.display())),
+        }
     }
 
     /// Adds the lessons in `dir`: scripts in the lesson language (`*.txt`), grouped by the index
@@ -181,29 +260,14 @@ impl Tutor {
                 run.note = format!("Control not on screen: {name}");
             }
         }
+        let typed = keys(ctx);
+        self.record(now, &used, &typed);
         let Some(run) = &mut self.run else { return };
         if run.player.mode == Mode::Demo || run.player.finished() {
             return;
         }
         let mut inputs: Vec<Input> = used.into_iter().map(Input::Press).collect();
-        ctx.input(|i| {
-            let m = |alt: bool| (Some(alt), Some(i.modifiers.ctrl), Some(i.modifiers.shift));
-            for e in &i.events {
-                match e {
-                    egui::Event::Text(t) => inputs.extend(t.chars().map(|c| {
-                        let (alt, ctrl, shift) = m(i.modifiers.alt);
-                        Input::Key(Key { key: c.to_string(), alt, ctrl, shift })
-                    })),
-                    egui::Event::Key { key, pressed: true, modifiers, .. } => {
-                        let name = lesson_key(*key);
-                        if name.chars().count() > 1 {
-                            inputs.push(Input::Key(Key { key: name, alt: Some(modifiers.alt), ctrl: Some(modifiers.ctrl), shift: Some(modifiers.shift) }));
-                        }
-                    }
-                    _ => {}
-                }
-            }
-        });
+        inputs.extend(typed.into_iter().map(Input::Key));
         let mut outs = vec![];
         for input in inputs {
             outs.extend(run.player.input(input, now));
@@ -329,6 +393,24 @@ impl Tutor {
         if let Some((i, mode)) = start {
             self.start(ui.ctx(), i, mode, now);
         }
+        ui.add_space(10.0);
+        ui.label(RichText::new("RECORD A LESSON").small().color(Color32::GRAY));
+        match &self.recording {
+            None => {
+                if ui.button("Record").on_hover_text("Every control you use and every key you type becomes a line of a new lesson").clicked() {
+                    self.recording = Some(Recording { text: "Recorded lesson\n\n".into(), last: now, actions: 0 });
+                }
+            }
+            Some(rec) => {
+                let n = rec.actions;
+                ui.horizontal(|ui| {
+                    ui.label(RichText::new(format!("Recording: {n} actions. Go to Units View and work the equipment.")).color(Color32::from_rgb(255, 120, 100)));
+                    if ui.button("Stop and save").clicked() {
+                        self.stop_recording();
+                    }
+                });
+            }
+        }
         if !self.unreadable.is_empty() {
             ui.add_space(6.0);
             ui.label(RichText::new(format!("Could not read: {}", self.unreadable.join("; "))).small().color(Color32::from_rgb(255, 160, 140)));
@@ -355,6 +437,28 @@ mod tests {
             let lesson = gmdss::script::parse(text).unwrap();
             assert!(index.iter().any(|e| e.title == lesson.title), "{} not in index", lesson.title);
         }
+    }
+
+    /// Recording: two controls and a key, saved as a lesson that parses and is listed.
+    #[test]
+    fn recording_a_lesson() {
+        let dir = std::env::temp_dir().join(format!("gmdss_recorded_{}", std::process::id()));
+        let mut t = super::Tutor::new();
+        t.record_dir = dir.clone();
+        t.recording = Some(super::Recording { text: "Recorded lesson\n\n".into(), last: 10.0, actions: 0 });
+        t.record(12.0, &["VHF".into(), "VHF.VOL_OFF".into()], &[]);
+        let key = |k: &str, shift| gmdss::script::Key { key: k.into(), alt: Some(false), ctrl: Some(false), shift: Some(shift) };
+        t.record(13.5, &[], &[key("a", false), key("Enter", true), key(" ", false)]);
+        t.stop_recording();
+        let text = std::fs::read_to_string(dir.join("recorded_01.txt")).unwrap();
+        std::fs::remove_dir_all(&dir).ok();
+        assert!(text.starts_with("Recorded lesson 01\n"));
+        assert!(text.contains("delay 0 0 2.0\nmove_and_press VHF\n"), "{text}");
+        assert!(text.contains("kbd 'a' * * *\n") && text.contains("kbd Enter * * Shift\n") && text.contains("kbd ' ' * * *\n"), "{text}");
+        let s = t.lessons.last().unwrap();
+        assert_eq!(s.title, "Recorded lesson 01");
+        assert_eq!(t.index.last().unwrap().group, "Recorded lessons");
+        assert!(t.recording.is_none() && t.unreadable.is_empty(), "{:?}", t.unreadable);
     }
 
     /// A folder of lessons: the index entry finds its file by title words, the other file goes to

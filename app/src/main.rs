@@ -57,6 +57,7 @@ fn main() -> eframe::Result {
         let mut app = App::new(dir, link);
         if let Some(d) = &lessons {
             app.tutor.load_dir(Path::new(d));
+            app.tutor.record_dir = PathBuf::from(d);
         }
         Ok(Box::new(app))
     }))
