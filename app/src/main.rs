@@ -55,6 +55,7 @@ fn main() -> eframe::Result {
     eframe::run_native("gmdss", options, Box::new(|cc| {
         cc.egui_ctx.set_theme(egui::Theme::Dark); // ignore the system light theme
         let mut app = App::new(dir, link);
+        app.tutor.load_examinees();
         if let Some(d) = &lessons {
             app.tutor.load_dir(Path::new(d));
             app.tutor.record_dir = PathBuf::from(d);

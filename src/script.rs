@@ -254,11 +254,23 @@ pub struct Player {
     alternatives: Vec<(Input, String)>,
     timers: Vec<(f64, String)>,
     pub errors: u32,
+    /// The actions the student was asked for (presses and keys).
+    pub actions: u32,
+}
+
+/// Whether a finished lesson is passed, as the original scores it (TUTOR.CPP): an exam with at
+/// most two errors, running out of time counting as one more; practice with no errors when it
+/// asks for fewer than five actions, else with at most one error in ten.
+pub fn passed(mode: Mode, completed: bool, errors: u32, actions: u32) -> bool {
+    match mode {
+        Mode::Exam => errors + u32::from(!completed) <= 2,
+        _ => completed && if actions < 5 { errors == 0 } else { errors <= (actions + 5) / 10 },
+    }
 }
 
 impl Player {
     pub fn new(script: Script, mode: Mode, now: f64) -> Player {
-        Player { script, mode, pc: 0, wait: Wait::Run, started: now, deadline: None, in_init: false, pointed: String::new(), var: String::new(), passed: HashMap::new(), alternatives: vec![], timers: vec![], errors: 0 }
+        Player { script, mode, pc: 0, wait: Wait::Run, started: now, deadline: None, in_init: false, pointed: String::new(), var: String::new(), passed: HashMap::new(), alternatives: vec![], timers: vec![], errors: 0, actions: 0 }
     }
 
     pub fn title(&self) -> &str {
@@ -347,6 +359,7 @@ impl Player {
             Cmd::Release | Cmd::MoveXy(..) | Cmd::Error => {}
             Cmd::Kbd(k) => {
                 if student {
+                    self.actions += 1;
                     self.wait = Wait::Key(k);
                 } else {
                     out.push(Out::Key(k));
@@ -355,6 +368,7 @@ impl Player {
             Cmd::Alt => {
                 let k = Key { key: "Alt".into(), alt: None, ctrl: None, shift: None };
                 if student {
+                    self.actions += 1;
                     self.wait = Wait::Key(k);
                 } else {
                     out.push(Out::Key(k));
@@ -416,6 +430,7 @@ impl Player {
 
     fn press(&mut self, x: String, student: bool, out: &mut Vec<Out>) {
         if student {
+            self.actions += 1;
             self.wait = Wait::Press(x.split('+').map(str::to_string).collect());
         } else {
             out.push(Out::Press(x));
@@ -523,6 +538,16 @@ mod tests {
         assert_eq!(p.tick(2.0), [Out::CloseMsg, Out::Msg { text: "Press the red 16 key.".into(), x: 0, y: 0 }]);
         assert_eq!(p.tick(5.0), [Out::CloseMsg, Out::Press("VHF.16".into())]);
         assert_eq!(p.tick(5.3), [Out::Release, Out::Finished { completed: true, errors: 0, secs: 5.3 }]);
+    }
+
+    #[test]
+    fn scoring() {
+        use super::{passed, Mode};
+        assert!(passed(Mode::Exam, true, 2, 3) && !passed(Mode::Exam, true, 3, 30));
+        assert!(passed(Mode::Exam, false, 1, 3) && !passed(Mode::Exam, false, 2, 3));
+        assert!(passed(Mode::Practice, true, 0, 4) && !passed(Mode::Practice, true, 1, 4));
+        assert!(passed(Mode::Practice, true, 1, 5) && !passed(Mode::Practice, true, 2, 14) && passed(Mode::Practice, true, 2, 15));
+        assert!(!passed(Mode::Practice, false, 0, 9));
     }
 
     #[test]

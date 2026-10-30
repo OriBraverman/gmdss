@@ -32,6 +32,8 @@ pub struct Run {
     help: Option<(String, String)>,
     /// Further controls of an `A+B` press, pressed one per frame.
     queue: Vec<String>,
+    /// The examinee whose exam table records this run.
+    examinee: Option<usize>,
 }
 
 impl Run {
@@ -56,6 +58,57 @@ pub struct Tutor {
     recording: Option<Recording>,
     /// Where recorded lessons are saved.
     pub record_dir: std::path::PathBuf,
+    examinees: Vec<Examinee>,
+    examinee: Option<usize>,
+    new_name: String,
+    confirm_delete: bool,
+    /// Where the examinees' tables are kept, one file each.
+    pub exam_dir: std::path::PathBuf,
+}
+
+/// An examinee's exam table, as on the original (BX_TU_EL, BX_TU_ER): for each lesson the test
+/// (practice) attempts, the errors in the last one, the exam attempts and whether the last exam
+/// was passed.
+pub struct Examinee {
+    name: String,
+    file: std::path::PathBuf,
+    rows: std::collections::BTreeMap<String, Row>,
+}
+
+#[derive(Default, Debug, Clone, Copy, PartialEq)]
+struct Row {
+    tests: u32,
+    last_errors: Option<u32>,
+    exams: u32,
+    passed: bool,
+}
+
+impl Examinee {
+    /// The file: the name, then `T TR E ER title` per lesson, tab separated.
+    fn to_text(&self) -> String {
+        let mut s = format!("{}\n", self.name);
+        for (title, r) in &self.rows {
+            let tr = r.last_errors.map_or("-".into(), |e| e.to_string());
+            s += &format!("{}\t{tr}\t{}\t{}\t{title}\n", r.tests, r.exams, if r.passed { "Ok" } else { "-" });
+        }
+        s
+    }
+
+    fn parse(text: &str, file: std::path::PathBuf) -> Option<Examinee> {
+        let mut lines = text.lines();
+        let name = lines.next()?.trim().to_string();
+        let mut rows = std::collections::BTreeMap::new();
+        for l in lines {
+            let [t, tr, e, er, title] = l.splitn(5, '\t').collect::<Vec<_>>()[..] else { continue };
+            rows.insert(title.to_string(), Row { tests: t.parse().ok()?, last_errors: tr.parse().ok(), exams: e.parse().ok()?, passed: er == "Ok" });
+        }
+        Some(Examinee { name, file, rows })
+    }
+
+    fn save(&self) -> std::io::Result<()> {
+        std::fs::create_dir_all(self.file.parent().unwrap_or(std::path::Path::new(".")))?;
+        std::fs::write(&self.file, self.to_text())
+    }
 }
 
 /// A lesson written from what the instructor does, as the original's recorder (TU_WR_AC): before
@@ -135,7 +188,7 @@ fn lesson_key(key: egui::Key) -> String {
 impl Tutor {
     pub fn new() -> Tutor {
         let lessons = LESSONS.iter().map(|t| script::parse(t).expect("built-in lesson")).collect();
-        Tutor { index: script::parse_index(INDEX), lessons, run: None, results: vec![], missing: vec![], help_request: None, unreadable: vec![], recording: None, record_dir: "recorded_lessons".into() }
+        Tutor { index: script::parse_index(INDEX), lessons, run: None, results: vec![], missing: vec![], help_request: None, unreadable: vec![], recording: None, record_dir: "recorded_lessons".into(), examinees: vec![], examinee: None, new_name: String::new(), confirm_delete: false, exam_dir: "examinees".into() }
     }
 
     /// While recording: the controls used and the keys typed this frame become lesson lines.
@@ -166,6 +219,56 @@ impl Tutor {
             }
             Err(e) => self.unreadable.push(format!("{}: {e}", path.display())),
         }
+    }
+
+    /// Reads the examinees' tables from `exam_dir`.
+    pub fn load_examinees(&mut self) {
+        let Ok(entries) = std::fs::read_dir(&self.exam_dir) else { return };
+        let mut paths: Vec<_> = entries.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x == "txt")).collect();
+        paths.sort();
+        for p in paths {
+            match std::fs::read_to_string(&p).ok().and_then(|t| Examinee::parse(&t, p.clone())) {
+                Some(e) => self.examinees.push(e),
+                None => self.unreadable.push(format!("{} (exam table)", p.display())),
+            }
+        }
+    }
+
+    fn new_examinee(&mut self) {
+        let free = |n: &usize| {
+            let f = self.exam_dir.join(format!("{n}.txt"));
+            !f.exists() && !self.examinees.iter().any(|e| e.file == f)
+        };
+        let n = (1..).find(free).unwrap();
+        let e = Examinee { name: self.new_name.trim().to_string(), file: self.exam_dir.join(format!("{n}.txt")), rows: Default::default() };
+        if let Err(err) = e.save() {
+            self.unreadable.push(format!("{}: {err}", e.file.display()));
+        }
+        self.examinees.push(e);
+        self.examinee = Some(self.examinees.len() - 1);
+        self.new_name.clear();
+    }
+
+    fn delete_examinee(&mut self, k: usize) {
+        let e = self.examinees.remove(k);
+        let _ = std::fs::remove_file(&e.file);
+        self.examinee = None;
+        self.confirm_delete = false;
+        if let Some(run) = &mut self.run {
+            run.examinee = None;
+        }
+    }
+
+    /// The lessons in index order, with their number in `lessons`.
+    fn listed(&self) -> Vec<(usize, &Entry)> {
+        self.index.iter().filter_map(|e| Some((self.lessons.iter().position(|l| l.title == e.title)?, e))).collect()
+    }
+
+    /// The exam button: a lesson the examinee has not passed, chosen at random.
+    fn unpassed(&self, k: usize) -> Option<usize> {
+        let open: Vec<usize> = self.listed().into_iter().filter(|(_, e)| !self.examinees[k].rows.get(&e.title).is_some_and(|r| r.passed)).map(|(i, _)| i).collect();
+        let seed = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.subsec_nanos() as usize);
+        (!open.is_empty()).then(|| open[seed % open.len()])
     }
 
     /// Adds the lessons in `dir`: scripts in the lesson language (`*.txt`), grouped by the index
@@ -223,7 +326,7 @@ impl Tutor {
     /// Starts lesson `i` (in `LESSONS` order).
     pub fn start(&mut self, ctx: &egui::Context, i: usize, mode: Mode, now: f64) {
         let help = self.index.iter().find(|e| e.title == self.lessons[i].title).and_then(|e| e.help.clone());
-        self.run = Some(Run { player: Player::new(self.lessons[i].clone(), mode, now), task: String::new(), msg: None, note: String::new(), help, queue: vec![] });
+        self.run = Some(Run { player: Player::new(self.lessons[i].clone(), mode, now), task: String::new(), msg: None, note: String::new(), help, queue: vec![], examinee: None });
         bus(ctx, |b| *b = Default::default());
     }
 
@@ -313,7 +416,22 @@ impl Tutor {
                         Mode::Exam => "exam",
                     };
                     let how = if completed { "completed" } else { "time is up" };
-                    self.results.push(format!("{}: {mode} {how}, {errors} errors, {:.1} min", run.player.title(), secs / 60.0));
+                    let ok = script::passed(run.player.mode, completed, errors, run.player.actions);
+                    let verdict = if run.player.mode == Mode::Demo { "" } else if ok { ", passed" } else { ", not passed" };
+                    self.results.push(format!("{}: {mode} {how}, {errors} errors, {:.1} min{verdict}", run.player.title(), secs / 60.0));
+                    if let Some(e) = run.examinee.and_then(|k| self.examinees.get_mut(k)) {
+                        let r = e.rows.entry(run.player.title().to_string()).or_default();
+                        if run.player.mode == Mode::Exam {
+                            r.exams += 1;
+                            r.passed = ok;
+                        } else {
+                            r.tests += 1;
+                            r.last_errors = Some(errors);
+                        }
+                        if let Err(err) = e.save() {
+                            self.unreadable.push(format!("{}: {err}", e.file.display()));
+                        }
+                    }
                     run.msg = None;
                     bus(ctx, |b| {
                         b.point = None;
@@ -367,6 +485,77 @@ impl Tutor {
         }
     }
 
+    /// The examinees and the chosen one's exam table: practice (test) a lesson from its row, or
+    /// take an exam in a lesson not yet passed. The runs are recorded in the table.
+    fn exam_table(&mut self, ui: &mut egui::Ui, now: f64) {
+        ui.label(RichText::new("EXAMINEES").small().color(Color32::GRAY));
+        ui.horizontal_wrapped(|ui| {
+            for (k, e) in self.examinees.iter().enumerate() {
+                if ui.selectable_label(self.examinee == Some(k), &e.name).clicked() {
+                    self.examinee = (self.examinee != Some(k)).then_some(k);
+                    self.confirm_delete = false;
+                }
+            }
+            ui.add(egui::TextEdit::singleline(&mut self.new_name).hint_text("Name").desired_width(120.0));
+            if ui.add_enabled(!self.new_name.trim().is_empty(), egui::Button::new("New")).clicked() {
+                self.new_examinee();
+            }
+        });
+        let Some(k) = self.examinee else { return };
+        let mut start = None;
+        ui.horizontal(|ui| {
+            if self.confirm_delete {
+                ui.label(format!("The exam table of {} will be deleted. OK?", self.examinees[k].name));
+                if ui.button("Delete").clicked() {
+                    self.delete_examinee(k);
+                }
+                if ui.button("Cancel").clicked() {
+                    self.confirm_delete = false;
+                }
+                return;
+            }
+            match self.unpassed(k) {
+                Some(i) => {
+                    if ui.button("Exam").on_hover_text("An exam in a lesson not yet passed, chosen at random").clicked() {
+                        start = Some((i, Mode::Exam));
+                    }
+                }
+                None => {
+                    ui.label("Every lesson passed.");
+                }
+            }
+            if ui.button("Delete").clicked() {
+                self.confirm_delete = true;
+            }
+        });
+        let Some(e) = self.examinees.get(k) else { return };
+        egui::Grid::new("exam_table").striped(true).show(ui, |ui| {
+            for h in ["Lesson", "T", "TR", "E", "ER", ""] {
+                ui.label(RichText::new(h).small().color(Color32::GRAY));
+            }
+            ui.end_row();
+            for (i, entry) in self.listed() {
+                let r = e.rows.get(&entry.title).copied().unwrap_or_default();
+                ui.label(&entry.title);
+                ui.label(r.tests.to_string());
+                ui.label(r.last_errors.map_or(String::new(), |e| e.to_string()));
+                ui.label(r.exams.to_string());
+                ui.label(if r.passed { "Ok" } else { "" });
+                if ui.small_button("Test").clicked() {
+                    start = Some((i, Mode::Practice));
+                }
+                ui.end_row();
+            }
+        });
+        ui.label(RichText::new("T tests (practice), TR errors in the last test, E exams, ER the last exam passed").small().color(Color32::GRAY));
+        if let Some((i, mode)) = start {
+            self.start(ui.ctx(), i, mode, now);
+            if let Some(run) = &mut self.run {
+                run.examinee = Some(k);
+            }
+        }
+    }
+
     pub fn show(&mut self, ui: &mut egui::Ui, now: f64) {
         ui.label(RichText::new("LESSONS").small().color(Color32::GRAY));
         let mut group = "";
@@ -393,6 +582,8 @@ impl Tutor {
         if let Some((i, mode)) = start {
             self.start(ui.ctx(), i, mode, now);
         }
+        ui.add_space(10.0);
+        self.exam_table(ui, now);
         ui.add_space(10.0);
         ui.label(RichText::new("RECORD A LESSON").small().color(Color32::GRAY));
         match &self.recording {
@@ -459,6 +650,35 @@ mod tests {
         assert_eq!(s.title, "Recorded lesson 01");
         assert_eq!(t.index.last().unwrap().group, "Recorded lessons");
         assert!(t.recording.is_none() && t.unreadable.is_empty(), "{:?}", t.unreadable);
+    }
+
+    /// An examinee: a test and two exams recorded, the table saved and read back.
+    #[test]
+    fn exam_table() {
+        let dir = std::env::temp_dir().join(format!("gmdss_examinees_{}", std::process::id()));
+        let ctx = eframe::egui::Context::default();
+        let mut t = super::Tutor::new();
+        t.exam_dir = dir.clone();
+        t.new_name = "A. Student".into();
+        t.new_examinee();
+        let title = t.lessons[0].title.clone();
+        let finish = |t: &mut super::Tutor, mode, completed, errors| {
+            t.start(&ctx, 0, mode, 0.0);
+            t.run.as_mut().unwrap().examinee = Some(0);
+            t.apply(&ctx, vec![gmdss::script::Out::Finished { completed, errors, secs: 60.0 }]);
+        };
+        finish(&mut t, super::Mode::Practice, true, 4);
+        finish(&mut t, super::Mode::Exam, true, 1);
+        assert!(t.unpassed(0) != Some(0));
+        finish(&mut t, super::Mode::Exam, true, 3);
+        let mut u = super::Tutor::new();
+        u.exam_dir = dir.clone();
+        u.load_examinees();
+        std::fs::remove_dir_all(&dir).ok();
+        assert_eq!(u.examinees.len(), 1);
+        assert_eq!(u.examinees[0].name, "A. Student");
+        assert_eq!(u.examinees[0].rows[&title], super::Row { tests: 1, last_errors: Some(4), exams: 2, passed: false });
+        assert!(t.results.last().unwrap().ends_with("not passed"), "{:?}", t.results);
     }
 
     /// A folder of lessons: the index entry finds its file by title words, the other file goes to
