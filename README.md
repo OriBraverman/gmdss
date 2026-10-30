@@ -9,6 +9,15 @@ It re-implements the behaviour of a 1996 DOS trainer (Transas "SAILOR GMDSS Trai
 from its documentation, its data formats and a study of how the program behaves. No code, text,
 pictures or data of the original are part of this repository.
 
+![VHF radiotelephone and VHF DSC controller](docs/screenshots/vhf.png)
+
+| | |
+|---|---|
+| ![MF/HF SSB and MF/HF DSC](docs/screenshots/hf.png) | ![Inmarsat-C transceiver and message terminal](docs/screenshots/inm.png) |
+| MF/HF SSB radiotelephone and DSC controller | Inmarsat-C transceiver and message terminal |
+| ![Chart with coast stations and ranges](docs/screenshots/tab_chart.png) | ![Lessons: demonstration, practice, exam](docs/screenshots/tab_tutor.png) |
+| Chart: coast stations, NAVTEX and earth stations, sea-area ranges | Lessons: demonstration, practice and exam, examinees' tables |
+
 ## Run
 
 ```

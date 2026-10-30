@@ -69,6 +69,77 @@ impl HelpFile {
     pub fn named(&self, name: &str) -> Option<usize> {
         self.topics.iter().position(|t| t.name.eq_ignore_ascii_case(name))
     }
+
+    /// The topics that have Russian text, in the translation format: `@@ n` (topic number) on a
+    /// line, then the text with its links as `[[target|text]]` and pictures as `{{picture}}`.
+    pub fn russian(&self) -> String {
+        let mut s = String::new();
+        for (n, t) in self.topics.iter().enumerate().filter(|(_, t)| t.text.chars().any(|c| ('\u{410}'..='\u{44f}').contains(&c))) {
+            s += &format!("@@ {n}\n{}\n", marked(t));
+        }
+        s
+    }
+
+    /// Replaces topics by their translations (the `russian` format); returns how many.
+    pub fn translate(&mut self, file: &str) -> usize {
+        let mut done = 0;
+        for part in file.split("\n@@ ").map(|p| p.strip_prefix("@@ ").unwrap_or(p)) {
+            let Some((n, body)) = part.split_once('\n') else { continue };
+            let Some(t) = n.trim().parse::<usize>().ok().and_then(|n| self.topics.get_mut(n)) else { continue };
+            (t.text, t.links, t.pictures) = unmarked(body.trim_end_matches(['\r', '\n']));
+            t.title = t.text.lines().map(str::trim).find(|l| l.chars().count() > 2).unwrap_or(&t.name).to_string();
+            done += 1;
+        }
+        done
+    }
+}
+
+/// A topic's text with its links as `[[target|text]]` and its pictures as `{{picture}}`.
+fn marked(t: &Topic) -> String {
+    let chars: Vec<char> = t.text.chars().collect();
+    let mut s = String::new();
+    let mut close = None;
+    for i in 0..=chars.len() {
+        if close == Some(i) {
+            s += "]]";
+            close = None;
+        }
+        for (_, p) in t.pictures.iter().filter(|(at, _)| *at == i) {
+            s += &format!("{{{{{p}}}}}");
+        }
+        if let Some(l) = t.links.iter().find(|l| l.start == i && l.len > 0).filter(|_| close.is_none()) {
+            s += &format!("[[{}|", l.target);
+            close = Some(i + l.len);
+        }
+        if let Some(c) = chars.get(i) {
+            s.push(*c);
+        }
+    }
+    s
+}
+
+/// The text, links and pictures of a `marked` text.
+fn unmarked(m: &str) -> (String, Vec<Link>, Vec<(usize, usize)>) {
+    let (mut text, mut links, mut pictures) = (String::new(), vec![], vec![]);
+    let (mut n, mut open, mut rest) = (0, None, m);
+    while let Some(c) = rest.chars().next() {
+        if let Some((target, after)) = rest.strip_prefix("[[").and_then(|r| r.split_once('|')).and_then(|(t, a)| Some((t.parse().ok()?, a))) {
+            open = Some((n, target));
+            rest = after;
+        } else if let Some((after, (start, target))) = rest.strip_prefix("]]").zip(open) {
+            links.push(Link { start, len: n - start, target });
+            open = None;
+            rest = after;
+        } else if let Some((k, after)) = rest.strip_prefix("{{").and_then(|r| r.split_once("}}")).and_then(|(k, a)| Some((k.parse().ok()?, a))) {
+            pictures.push((n, k));
+            rest = after;
+        } else {
+            text.push(c);
+            n += 1;
+            rest = &rest[c.len_utf8()..];
+        }
+    }
+    (text, links, pictures)
 }
 
 const CP866_HIGH: &str = "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯабвгдежзийклмноп░▒▓│┤╡╢╖╕╣║╗╝╜╛┐└┴┬├─┼╞╟╚╔╩╦╠═╬╧╨╤╥╙╘╒╓╫╪┘┌█▄▌▐▀рстуфхцчшщъыьэюяЁёЄєЇїЎў°∙·√№¤■\u{a0}";
@@ -185,6 +256,23 @@ pub fn parse(b: &[u8]) -> Option<HelpFile> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Russian topics out in the translation format, a translation back in with its links.
+    #[test]
+    fn translation() {
+        let t = |text: &str, links, pictures| Topic { name: String::new(), title: String::new(), text: text.into(), links, pictures };
+        let mut h = HelpFile {
+            topics: vec![t("English\n", vec![], vec![]), t("Смотри рисунок\nДалее", vec![Link { start: 15, len: 5, target: 0 }], vec![(6, 3)])],
+            pictures: vec![],
+        };
+        let ru = h.russian();
+        assert_eq!(ru, "@@ 1\nСмотри{{3}} рисунок\n[[0|Далее]]\n");
+        assert_eq!(unmarked(&ru[5..ru.len() - 1]), (h.topics[1].text.clone(), vec![Link { start: 15, len: 5, target: 0 }], vec![(6, 3)]));
+        assert_eq!(h.translate("@@ 1\r\nSee{{3}} the picture\r\n[[0|Next]]\r\n@@ 9\nnone\n"), 1);
+        let s = &h.topics[1];
+        assert_eq!((s.text.as_str(), s.title.as_str()), ("See the picture\r\nNext", "See the picture"));
+        assert_eq!((s.links[0].start, s.links[0].len, s.pictures[0]), (17, 4, (3, 3)));
+    }
 
     #[test]
     fn topics_links_and_pictures() {
