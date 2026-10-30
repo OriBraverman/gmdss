@@ -1,4 +1,5 @@
-//! MF/HF installation: the RE2100 SSB transceiver above the MF/HF DSC modem.
+//! MF/HF installation: the RE2100 SSB transceiver above the MF/HF DSC unit RM2150; the
+//! radiotelex station's DSC / telex unit RM2151 works the same transceiver.
 
 use crate::clock::SimClock;
 use crate::panel::Plate;
@@ -14,40 +15,65 @@ pub struct HfStation {
     dsc_vol: u8,
     art: crate::svg_art::Art,
     dsc_art: crate::svg_art::Art,
-    /// The radiotelex station's DSC / telex unit.
+    /// The radiotelex station's DSC / telex unit, a DSC controller of its own.
+    rm2151: Controller,
+    rm2151_vol: u8,
     rm2151_art: crate::svg_art::Art,
 }
 
 impl HfStation {
     pub fn new(ship: &Ship) -> HfStation {
-        let mut dsc = Controller::new(&ship.mmsi, Band::MfHf);
-        dsc.position = Some(Position { lat_min: ship.lat_min, lon_min: ship.lon_min });
-        HfStation { art: crate::svg_art::Art::new("hf_re2100", include_str!("../assets/panels/hf_re2100.svg")), hf: HfRadio::default(), vol: 0, dsc, dsc_vol: 0, dsc_art: dsc_panel::art("hf_dsc", "MF/HF DSC RM2150"), rm2151_art: dsc_panel::art("hf_tlx_dsc", "MF/HF DSC / TELEX RM2151") }
+        let unit = || {
+            let mut c = Controller::new(&ship.mmsi, Band::MfHf);
+            c.position = Some(Position { lat_min: ship.lat_min, lon_min: ship.lon_min });
+            c
+        };
+        HfStation {
+            art: crate::svg_art::Art::new("hf_re2100", include_str!("../assets/panels/hf_re2100.svg")),
+            hf: HfRadio::default(),
+            vol: 0,
+            dsc: unit(),
+            dsc_vol: 0,
+            dsc_art: dsc_panel::art("hf_dsc", "MF/HF DSC RM2150"),
+            rm2151: unit(),
+            rm2151_vol: 0,
+            rm2151_art: dsc_panel::art("hf_tlx_dsc", "MF/HF DSC / TELEX RM2151"),
+        }
     }
 
     /// Applies the ship's identity and position (Options may change them).
     pub fn sync_ship(&mut self, ship: &Ship) {
-        if self.dsc.mmsi != ship.mmsi {
-            self.dsc.mmsi = ship.mmsi.clone();
+        for c in [&mut self.dsc, &mut self.rm2151] {
+            if c.mmsi != ship.mmsi {
+                c.mmsi = ship.mmsi.clone();
+            }
+            c.position = Some(Position { lat_min: ship.lat_min, lon_min: ship.lon_min });
         }
-        self.dsc.position = Some(Position { lat_min: ship.lat_min, lon_min: ship.lon_min });
     }
 
     /// Current drawn from the 24 V supply (A).
     pub fn load_a(&self) -> f64 {
         let radio = if !self.hf.on { 0.0 } else if self.hf.transmitting() { 20.0 } else { 2.0 };
-        radio + if self.dsc_vol > 0 { 0.3 } else { 0.0 }
+        radio + [self.dsc_vol, self.rm2151_vol].iter().map(|&v| if v > 0 { 0.3 } else { 0.0 }).sum::<f64>()
     }
 
     pub fn tick(&mut self, clock: &SimClock, shared: &mut Shared) {
         let now = clock.secs();
         let t = clock.now();
         self.hf.tick(now);
+        let utc = (t.hour, t.minute, (t.seconds % 60) as u8);
         if self.dsc_vol > 0 {
-            let out = self.dsc.tick(now, (t.hour, t.minute, (t.seconds % 60) as u8));
-            self.transmit(out, clock, shared);
+            let out = self.dsc.tick(now, utc);
+            Self::transmit(&self.hf, &mut self.dsc, out, clock, shared);
+        }
+        if self.rm2151_vol > 0 {
+            let out = self.rm2151.tick(now, utc);
+            Self::transmit(&self.hf, &mut self.rm2151, out, clock, shared);
         }
         for call in shared.world.tick_band(now, true) {
+            if self.rm2151_vol > 0 {
+                self.rm2151.receive(call.clone());
+            }
             if self.dsc_vol == 0 {
                 continue;
             }
@@ -63,20 +89,21 @@ impl HfStation {
         }
     }
 
-    fn transmit(&mut self, calls: Vec<gmdss::dsc::Call>, clock: &SimClock, shared: &mut Shared) {
+    /// Calls a DSC unit sends go out through the transceiver, if it is on.
+    fn transmit(hf: &HfRadio, unit: &mut Controller, calls: Vec<gmdss::dsc::Call>, clock: &SimClock, shared: &mut Shared) {
         for call in calls {
-            if self.hf.on {
+            if hf.on {
                 shared.note(clock, format!("MF/HF DSC sent: {}", dsc_panel::describe(&call)));
                 shared.world.transmit(&call, clock.secs(), shared.ship_pos, shared.hour);
             } else {
-                self.dsc.tx_failed();
+                unit.tx_failed();
             }
         }
     }
 
     /// The DSC controller is sounding its alarm.
     pub fn dsc_alarm(&self) -> bool {
-        self.dsc_vol > 0 && self.dsc.alarm
+        (self.dsc_vol > 0 && self.dsc.alarm) || (self.rm2151_vol > 0 && self.rm2151.alarm)
     }
 
     /// The set sends or tests the two-tone alarm signal.
@@ -91,15 +118,13 @@ impl HfStation {
         self.hf.ptt = ptt.is_pointer_button_down_on() && self.hf.on;
         ui.add_space(6.0);
         let out = dsc_panel::show(ui, "HF_DSC", &mut self.dsc_art, &mut self.dsc, &mut self.dsc_vol, w);
-        self.transmit(out, clock, shared);
+        Self::transmit(&self.hf, &mut self.dsc, out, clock, shared);
     }
 
     /// The radiotelex station's DSC / telex unit RM2151 (lesson scope `HF_Tlx`).
-    /// ponytail: it drives the same DSC controller as the RM2150; a second controller if lessons
-    /// ever need the two apart.
     pub fn show_rm2151(&mut self, ui: &mut egui::Ui, clock: &SimClock, shared: &mut Shared) {
-        let out = dsc_panel::show(ui, "HF_Tlx", &mut self.rm2151_art, &mut self.dsc, &mut self.dsc_vol, 420.0);
-        self.transmit(out, clock, shared);
+        let out = dsc_panel::show(ui, "HF_Tlx", &mut self.rm2151_art, &mut self.rm2151, &mut self.rm2151_vol, 420.0);
+        Self::transmit(&self.hf, &mut self.rm2151, out, clock, shared);
     }
 
     fn re2100(&mut self, ui: &mut egui::Ui, width: f32) {

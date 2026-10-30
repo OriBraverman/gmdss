@@ -50,6 +50,13 @@ pub struct Tutor {
     pub missing: Vec<String>,
     /// A help topic the student asked to see (file, topic name), for the Books page.
     pub help_request: Option<(String, String)>,
+    /// Lesson files from `load_dir` that could not be read.
+    unreadable: Vec<String>,
+}
+
+/// Words of a lesson title, for matching index entries to lesson files.
+fn words(title: &str) -> std::collections::BTreeSet<String> {
+    title.split(|c: char| !c.is_ascii_alphanumeric()).filter(|w| !w.is_empty()).map(str::to_ascii_lowercase).collect()
 }
 
 /// Lesson key names <-> egui keys.
@@ -79,7 +86,52 @@ fn lesson_key(key: egui::Key) -> String {
 impl Tutor {
     pub fn new() -> Tutor {
         let lessons = LESSONS.iter().map(|t| script::parse(t).expect("built-in lesson")).collect();
-        Tutor { index: script::parse_index(INDEX), lessons, run: None, results: vec![], missing: vec![], help_request: None }
+        Tutor { index: script::parse_index(INDEX), lessons, run: None, results: vec![], missing: vec![], help_request: None, unreadable: vec![] }
+    }
+
+    /// Adds the lessons in `dir`: scripts in the lesson language (`*.txt`), grouped by the index
+    /// found there (`SCE.TUD*`, the index format), e.g. a user's own copies of the original's
+    /// lessons. Index entries go to the file whose title shares the most words with theirs.
+    pub fn load_dir(&mut self, dir: &std::path::Path) {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            self.unreadable.push(format!("{} (no such folder)", dir.display()));
+            return;
+        };
+        let mut paths: Vec<_> = entries.flatten().map(|e| e.path()).filter(|p| p.extension().is_some_and(|x| x.eq_ignore_ascii_case("txt"))).collect();
+        paths.sort();
+        let read = |p: &std::path::Path| String::from_utf8_lossy(&std::fs::read(p).unwrap_or_default()).into_owned();
+        let is_index = |p: &std::path::Path| p.file_name().is_some_and(|n| n.to_string_lossy().to_ascii_uppercase().starts_with("SCE.TUD"));
+        let index = paths.iter().find(|p| is_index(p)).map(|p| script::parse_index(&read(p))).unwrap_or_default();
+        let mut loaded = vec![];
+        for p in paths.iter().filter(|p| !is_index(p)) {
+            match script::parse(&read(p)) {
+                Ok(s) => loaded.push(s),
+                Err(e) => self.unreadable.push(format!("{}: line {}: {}", p.file_name().unwrap_or_default().to_string_lossy(), e.line, e.message)),
+            }
+        }
+        let mut placed = vec![false; loaded.len()];
+        for mut e in index {
+            let similarity = |s: &Script| {
+                let (a, b) = (words(&e.title), words(&s.title));
+                a.intersection(&b).count() as f32 / a.union(&b).count().max(1) as f32
+            };
+            let best = (0..loaded.len()).filter(|&i| !placed[i]).max_by(|&a, &b| similarity(&loaded[a]).total_cmp(&similarity(&loaded[b])));
+            if let Some(i) = best.filter(|&i| similarity(&loaded[i]) >= 0.6) {
+                placed[i] = true;
+                loaded[i].title = e.title.clone();
+                e.group = format!("{} (loaded)", e.group);
+                self.index.push(e);
+            }
+        }
+        for (s, _) in loaded.iter().zip(&placed).filter(|(_, p)| !**p) {
+            self.index.push(Entry { group: "Other loaded lessons".into(), title: s.title.clone(), help: None });
+        }
+        self.lessons.extend(loaded);
+    }
+
+    #[cfg(test)]
+    pub fn lesson_count(&self) -> usize {
+        self.lessons.len()
     }
 
     /// Adds a lesson (tests: the original's lessons, when present locally); returns its number.
@@ -277,6 +329,10 @@ impl Tutor {
         if let Some((i, mode)) = start {
             self.start(ui.ctx(), i, mode, now);
         }
+        if !self.unreadable.is_empty() {
+            ui.add_space(6.0);
+            ui.label(RichText::new(format!("Could not read: {}", self.unreadable.join("; "))).small().color(Color32::from_rgb(255, 160, 140)));
+        }
         ui.add_space(12.0);
         ui.label(RichText::new("RESULTS").small().color(Color32::GRAY));
         if self.results.is_empty() {
@@ -299,5 +355,28 @@ mod tests {
             let lesson = gmdss::script::parse(text).unwrap();
             assert!(index.iter().any(|e| e.title == lesson.title), "{} not in index", lesson.title);
         }
+    }
+
+    /// A folder of lessons: the index entry finds its file by title words, the other file goes to
+    /// "Other loaded lessons", the broken one is reported.
+    #[test]
+    fn lessons_from_a_folder() {
+        let dir = std::env::temp_dir().join(format!("gmdss_lessons_{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("SCE.TUD.txt"), "NUnits\r\n.-Watch receiver\r\n*--Operating with the watch receiver|r501.hlp|501\r\n").unwrap();
+        std::fs::write(dir.join("29.TUE.txt"), "operating with watch receiver\r\n\r\nmove_and_press R_501\r\nrelease\r\nexit\r\n").unwrap();
+        std::fs::write(dir.join("30.TUE.txt"), "something else\r\n\r\nexit\r\n").unwrap();
+        std::fs::write(dir.join("31.TUE.txt"), "broken\r\n\r\nnot_a_command 1\r\n").unwrap();
+        let mut t = super::Tutor::new();
+        let before = (t.index.len(), t.lessons.len());
+        t.load_dir(&dir);
+        std::fs::remove_dir_all(&dir).ok();
+        assert_eq!((t.index.len(), t.lessons.len()), (before.0 + 2, before.1 + 2));
+        let e = &t.index[before.0];
+        assert_eq!((e.group.as_str(), e.title.as_str()), ("Watch receiver (loaded)", "Operating with the watch receiver"));
+        assert_eq!(t.lessons[before.1].title, "Operating with the watch receiver");
+        assert_eq!(e.help, Some(("r501.hlp".into(), "501".into())));
+        assert_eq!(t.index[before.0 + 1].group, "Other loaded lessons");
+        assert!(t.unreadable.len() == 1 && t.unreadable[0].starts_with("31.TUE.txt"), "{:?}", t.unreadable);
     }
 }

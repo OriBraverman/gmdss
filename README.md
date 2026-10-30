@@ -21,6 +21,9 @@ original installation and are not distributed here; without them the app starts 
 Used when present: `ETHER.DAT` (radio propagation tables), the `help` folder next to `data`
 (Books) and `chart/COAST_RS.DAT` (station positions on the chart).
 Lessons (`lessons/*.txt`) and the demo NAVTEX broadcasts are part of this project.
+More lessons in the same script language (one `*.txt` per lesson, optional index `SCE.TUD.txt` in
+the `lessons/index.txt` format) are added with `--lessons <folder>`, for example your own copies of
+the original program's lessons as plain text; they are listed under their index groups.
 
 ## Layout
 

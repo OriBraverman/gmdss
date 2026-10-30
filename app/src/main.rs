@@ -1,8 +1,9 @@
 //! GMDSS training station: the operator's console with one device shown at a time.
 //!
-//! Usage: `gmdss-app [DATA_DIR] [--instructor PORT | --student HOST:PORT]`. The coast station
-//! (`*.CS`) and subscriber (`*.EU`) files are read from DATA_DIR, default `../_gmdss/data` or
-//! `_gmdss/data`. With `--instructor` this console teaches a class; `--student` joins one.
+//! Usage: `gmdss-app [DATA_DIR] [--instructor PORT | --student HOST:PORT] [--lessons DIR]`. The
+//! coast station (`*.CS`) and subscriber (`*.EU`) files are read from DATA_DIR, default
+//! `../_gmdss/data` or `_gmdss/data`. With `--instructor` this console teaches a class; `--student`
+//! joins one. `--lessons` adds the lesson scripts (`*.txt`, index `SCE.TUD*`) of a folder.
 
 mod books_page;
 mod chart_page;
@@ -33,6 +34,8 @@ fn main() -> eframe::Result {
     let dir = args.iter().enumerate().find(|(i, a)| !a.starts_with("--") && (*i == 0 || !args[i - 1].starts_with("--"))).map(|(_, a)| PathBuf::from(a)).or_else(|| {
         ["../_gmdss/data", "_gmdss/data", "../../_gmdss/data"].iter().map(PathBuf::from).find(|p| p.is_dir())
     });
+    // Extra lessons in the lesson language, e.g. the user's own copies of the original's.
+    let lessons = flag("--lessons");
     let link = match (flag("--instructor"), flag("--student")) {
         (Some(port), _) => Some(port.parse().map_err(|_| std::io::Error::other("bad port")).and_then(net_link::Link::instructor)),
         (_, Some(addr)) => Some(net_link::Link::student(&addr)),
@@ -51,7 +54,11 @@ fn main() -> eframe::Result {
     };
     eframe::run_native("gmdss", options, Box::new(|cc| {
         cc.egui_ctx.set_theme(egui::Theme::Dark); // ignore the system light theme
-        Ok(Box::new(App::new(dir, link)))
+        let mut app = App::new(dir, link);
+        if let Some(d) = &lessons {
+            app.tutor.load_dir(Path::new(d));
+        }
+        Ok(Box::new(app))
     }))
 }
 
@@ -656,6 +663,11 @@ mod tests {
             println!("{name}: {} missing {:?}", if finished { "finished" } else { "NOT finished" }, missing);
         }
         println!("{clean} of {total} parsed lessons ran clean; missing over all: {all_missing:?}");
+        let mut app = App::new(None, None);
+        let before = app.tutor.lesson_count();
+        app.tutor.load_dir(&dir);
+        println!("load_dir: {} lessons added", app.tutor.lesson_count() - before);
+        snapshot::render("app_tab_tutor_loaded", egui::vec2(1180.0, 1400.0), |ui| app.tutor.show(ui, 0.0));
     }
 
     /// Received Inmarsat-C messages print by themselves; Inmarsat-A screen text only with PRINT ON.
