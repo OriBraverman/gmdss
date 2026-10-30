@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Battery charger. Own drawing on the original's 564 x 167 layout.
-     Ids the app uses: face-A, face-V (meter faces; needle pivot 20 below the bottom centre, radius 68,
-     scale -50..+50 degrees), lamp-ON, switch (rocker MAN / OFF / AUTO in thirds from the top).
+     Ids the app uses: face-A, face-V (meter faces 58 high; needle pivot 147.6 below the face's bottom
+     centre, scale -23.2..+23.2 degrees at radius 190-204, as measured on the original), lamp-ON,
+     switch (rocker MAN / OFF / AUTO in thirds from the top).
      Text uses DejaVu Sans (bundled, see ../fonts). -->
 <svg xmlns="http://www.w3.org/2000/svg" width="564" height="167" viewBox="0 0 564 167" font-family="DejaVu Sans">
   <defs>
@@ -31,31 +32,30 @@
   <rect x="35" y="33" width="171" height="72" fill="#e3f3e3"/>
   <rect id="face-A" x="38" y="42" width="164" height="58" fill="#fff"/>
   <g font-family="DejaVu Sans" fill="#000">
-    <path d="M74.8,82.1 L67.9,76.3" stroke="#000" stroke-width="1.2"/>
-    <text x="62.5" y="74.3" font-size="7.5" text-anchor="middle">80</text>
-    <path d="M76.4,74.5 L73.0,70.9" stroke="#000" stroke-width="0.8"/>
-    <path d="M81.6,70.0 L78.6,66.1" stroke="#000" stroke-width="0.8"/>
-    <path d="M87.3,66.1 L84.7,61.9" stroke="#000" stroke-width="0.8"/>
-    <path d="M95.1,66.5 L91.3,58.4" stroke="#000" stroke-width="1.2"/>
-    <text x="88.3" y="54.5" font-size="7.5" text-anchor="middle">40</text>
-    <path d="M99.7,60.3 L98.1,55.6" stroke="#000" stroke-width="0.8"/>
-    <path d="M106.4,58.5 L105.3,53.6" stroke="#000" stroke-width="0.8"/>
-    <path d="M113.1,57.4 L112.6,52.4" stroke="#000" stroke-width="0.8"/>
-    <path d="M120.0,61.0 L120.0,52.0" stroke="#000" stroke-width="1.2"/>
-    <text x="120.0" y="47.5" font-size="7.5" text-anchor="middle">0</text>
-    <path d="M126.9,57.4 L127.4,52.4" stroke="#000" stroke-width="0.8"/>
-    <path d="M133.6,58.5 L134.7,53.6" stroke="#000" stroke-width="0.8"/>
-    <path d="M140.3,60.3 L141.9,55.6" stroke="#000" stroke-width="0.8"/>
-    <path d="M144.9,66.5 L148.7,58.4" stroke="#000" stroke-width="1.2"/>
-    <text x="151.7" y="54.5" font-size="7.5" text-anchor="middle">40</text>
-    <path d="M152.7,66.1 L155.3,61.9" stroke="#000" stroke-width="0.8"/>
-    <path d="M158.4,70.0 L161.4,66.1" stroke="#000" stroke-width="0.8"/>
-    <path d="M163.6,74.5 L167.0,70.9" stroke="#000" stroke-width="0.8"/>
-    <path d="M165.2,82.1 L172.1,76.3" stroke="#000" stroke-width="1.2"/>
-    <text x="177.5" y="74.3" font-size="7.5" text-anchor="middle">80</text>
-    <path d="M67.9,76.3 A68.0,68.0 0 0 1 172.1,76.3" fill="none" stroke="#000" stroke-width="0.8"/>
+    <path d="M45.0,72.7 L39.5,59.8" stroke="#000" stroke-width="1.3"/>
+    <text x="37.5" y="58.4" font-size="9.5" text-anchor="middle">80</text>
+    <path d="M52.5,65.0 L51.0,61.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M61.8,61.8 L60.6,57.9" stroke="#000" stroke-width="0.9"/>
+    <path d="M71.3,59.1 L70.2,55.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M81.7,61.2 L78.9,47.5" stroke="#000" stroke-width="1.3"/>
+    <text x="77.9" y="45.8" font-size="9.5" text-anchor="middle">40</text>
+    <path d="M90.5,55.1 L89.9,51.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M100.3,53.9 L99.9,49.8" stroke="#000" stroke-width="0.9"/>
+    <path d="M110.1,53.1 L109.9,49.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M120.0,57.3 L120.0,43.3" stroke="#000" stroke-width="1.3"/>
+    <text x="120.0" y="41.5" font-size="9.5" text-anchor="middle">0</text>
+    <path d="M129.9,53.1 L130.1,49.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M139.7,53.9 L140.1,49.8" stroke="#000" stroke-width="0.9"/>
+    <path d="M149.5,55.1 L150.1,51.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M158.3,61.2 L161.1,47.5" stroke="#000" stroke-width="1.3"/>
+    <text x="162.1" y="45.8" font-size="9.5" text-anchor="middle">40</text>
+    <path d="M168.7,59.1 L169.8,55.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M178.2,61.8 L179.4,57.9" stroke="#000" stroke-width="0.9"/>
+    <path d="M187.5,65.0 L189.0,61.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M195.0,72.7 L200.5,59.8" stroke="#000" stroke-width="1.3"/>
+    <text x="202.5" y="58.4" font-size="9.5" text-anchor="middle">80</text>
   </g>
-  <text x="120" y="88" font-size="18" text-anchor="middle" fill="#000">A</text>
+  <text x="120" y="92.7" font-size="20" text-anchor="middle" fill="#000">A</text>
   <path d="M35,105.5 H206" stroke="#a6c7a2" stroke-width="1"/>
 
   <!-- V meter. -->
@@ -66,46 +66,60 @@
   <rect x="359" y="33" width="171" height="72" fill="#e3f3e3"/>
   <rect id="face-V" x="362" y="42" width="164" height="58" fill="#fff"/>
   <g font-family="DejaVu Sans" fill="#000">
-    <path d="M398.8,82.1 L391.9,76.3" stroke="#000" stroke-width="1.2"/>
-    <text x="386.5" y="74.3" font-size="7.5" text-anchor="middle">0</text>
-    <path d="M400.8,74.2 L397.3,70.5" stroke="#000" stroke-width="0.8"/>
-    <path d="M406.4,69.5 L403.4,65.5" stroke="#000" stroke-width="0.8"/>
-    <path d="M412.5,65.4 L410.0,61.1" stroke="#000" stroke-width="0.8"/>
-    <path d="M419.0,62.2 L417.1,57.6" stroke="#000" stroke-width="0.8"/>
-    <path d="M427.1,63.5 L424.5,54.9" stroke="#000" stroke-width="1.2"/>
-    <text x="422.5" y="50.7" font-size="7.5" text-anchor="middle">10</text>
-    <path d="M433.1,58.0 L432.2,53.0" stroke="#000" stroke-width="0.8"/>
-    <path d="M440.3,57.1 L440.0,52.1" stroke="#000" stroke-width="0.8"/>
-    <path d="M447.7,57.1 L448.0,52.1" stroke="#000" stroke-width="0.8"/>
-    <path d="M454.9,58.0 L455.8,53.0" stroke="#000" stroke-width="0.8"/>
-    <path d="M460.9,63.5 L463.5,54.9" stroke="#000" stroke-width="1.2"/>
-    <text x="465.5" y="50.7" font-size="7.5" text-anchor="middle">20</text>
-    <path d="M469.0,62.2 L470.9,57.6" stroke="#000" stroke-width="0.8"/>
-    <path d="M475.5,65.4 L478.0,61.1" stroke="#000" stroke-width="0.8"/>
-    <path d="M481.6,69.5 L484.6,65.5" stroke="#000" stroke-width="0.8"/>
-    <path d="M487.2,74.2 L490.7,70.5" stroke="#000" stroke-width="0.8"/>
-    <path d="M489.2,82.1 L496.1,76.3" stroke="#000" stroke-width="1.2"/>
-    <text x="501.5" y="74.3" font-size="7.5" text-anchor="middle">30</text>
-    <path d="M391.9,76.3 A68.0,68.0 0 0 1 496.1,76.3" fill="none" stroke="#000" stroke-width="0.8"/>
+    <path d="M369.0,72.7 L363.5,59.8" stroke="#000" stroke-width="1.3"/>
+    <text x="361.5" y="58.4" font-size="9.5" text-anchor="middle">0</text>
+    <path d="M372.2,66.6 L370.6,62.8" stroke="#000" stroke-width="0.9"/>
+    <path d="M377.1,64.8 L375.7,60.9" stroke="#000" stroke-width="0.9"/>
+    <path d="M382.0,63.0 L380.7,59.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M387.0,61.4 L385.8,57.5" stroke="#000" stroke-width="0.9"/>
+    <path d="M392.1,60.0 L391.0,56.0" stroke="#000" stroke-width="0.9"/>
+    <path d="M397.2,58.6 L396.2,54.6" stroke="#000" stroke-width="0.9"/>
+    <path d="M402.3,57.4 L401.4,53.4" stroke="#000" stroke-width="0.9"/>
+    <path d="M407.4,56.4 L406.7,52.3" stroke="#000" stroke-width="0.9"/>
+    <path d="M412.6,55.4 L411.9,51.4" stroke="#000" stroke-width="0.9"/>
+    <path d="M418.4,59.0 L416.5,45.2" stroke="#000" stroke-width="1.3"/>
+    <text x="415.8" y="43.4" font-size="9.5" text-anchor="middle">10</text>
+    <path d="M423.0,54.0 L422.6,50.0" stroke="#000" stroke-width="0.9"/>
+    <path d="M428.2,53.5 L427.9,49.5" stroke="#000" stroke-width="0.9"/>
+    <path d="M433.5,53.2 L433.3,49.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M438.7,53.0 L438.6,48.9" stroke="#000" stroke-width="0.9"/>
+    <path d="M444.0,52.9 L444.0,48.8" stroke="#000" stroke-width="0.9"/>
+    <path d="M449.3,53.0 L449.4,48.9" stroke="#000" stroke-width="0.9"/>
+    <path d="M454.5,53.2 L454.7,49.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M459.8,53.5 L460.1,49.5" stroke="#000" stroke-width="0.9"/>
+    <path d="M465.0,54.0 L465.4,50.0" stroke="#000" stroke-width="0.9"/>
+    <path d="M469.6,59.0 L471.5,45.2" stroke="#000" stroke-width="1.3"/>
+    <text x="472.2" y="43.4" font-size="9.5" text-anchor="middle">20</text>
+    <path d="M475.4,55.4 L476.1,51.4" stroke="#000" stroke-width="0.9"/>
+    <path d="M480.6,56.4 L481.3,52.3" stroke="#000" stroke-width="0.9"/>
+    <path d="M485.7,57.4 L486.6,53.4" stroke="#000" stroke-width="0.9"/>
+    <path d="M490.8,58.6 L491.8,54.6" stroke="#000" stroke-width="0.9"/>
+    <path d="M495.9,60.0 L497.0,56.0" stroke="#000" stroke-width="0.9"/>
+    <path d="M501.0,61.4 L502.2,57.5" stroke="#000" stroke-width="0.9"/>
+    <path d="M506.0,63.0 L507.3,59.1" stroke="#000" stroke-width="0.9"/>
+    <path d="M510.9,64.8 L512.3,60.9" stroke="#000" stroke-width="0.9"/>
+    <path d="M515.8,66.6 L517.4,62.8" stroke="#000" stroke-width="0.9"/>
+    <path d="M519.0,72.7 L524.5,59.8" stroke="#000" stroke-width="1.3"/>
+    <text x="526.5" y="58.4" font-size="9.5" text-anchor="middle">30</text>
   </g>
-  <text x="444" y="88" font-size="18" text-anchor="middle" fill="#000">V</text>
+  <text x="444" y="92.7" font-size="20" text-anchor="middle" fill="#000">V</text>
   <path d="M359,105.5 H530" stroke="#a6c7a2" stroke-width="1"/>
 
   <!-- ON lamp. -->
   <circle cx="269" cy="41" r="11" fill="#000"/>
   <circle cx="269" cy="41" r="9.5" fill="#595959"/>
   <circle id="lamp-ON" cx="269" cy="41" r="7" fill="url(#lampOff)"/>
-  <text x="299" y="44" font-size="7.5" fill="#e3f3e3">ON</text>
+  <text x="297" y="44.3" font-size="10" fill="#e3f3e3">ON</text>
 
   <!-- Rocker switch body; the app draws the rocker. -->
   <rect x="250" y="67" width="44" height="54" rx="3" fill="#597d61"/>
   <rect x="250" y="67" width="40" height="52" rx="3" fill="#000"/>
   <rect id="switch" x="254" y="72" width="32" height="44" rx="2" fill="#414141"/>
-  <g font-size="7.5" fill="#e3f3e3">
-    <text x="299" y="76">MAN</text>
-    <text x="299" y="96">OFF</text>
-    <text x="299" y="116">AUTO</text>
+  <g font-size="10" fill="#e3f3e3">
+    <text x="297" y="74">MAN</text>
+    <text x="297" y="96.7">OFF</text>
+    <text x="297" y="117.3">AUTO</text>
   </g>
 
-  <text x="282" y="148" font-size="9" fill="#e3f3e3" text-anchor="middle">BATTERY CHARGER</text>
+  <text x="282" y="148.7" font-size="13" fill="#e3f3e3" text-anchor="middle">BATTERY CHARGER</text>
 </svg>

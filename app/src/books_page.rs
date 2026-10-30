@@ -8,6 +8,7 @@ use std::path::PathBuf;
 
 pub struct Books {
     shelf: crate::svg_art::Art,
+    shelf_ref: crate::svg_art::Art,
     files: Vec<(String, PathBuf)>,
     open: Option<(usize, HelpFile)>,
     topic: usize,
@@ -30,7 +31,10 @@ impl Books {
             .map(|p| (p.file_stem().unwrap().to_string_lossy().into_owned(), p))
             .collect();
         files.sort();
-        Books { shelf: crate::svg_art::Art::new("shelf", include_str!("../assets/panels/shelf.svg")), files, open: None, topic: 0, back: vec![], textures: HashMap::new() }
+        Books {
+            shelf: crate::svg_art::Art::new("shelf", include_str!("../assets/panels/shelf.svg")),
+            shelf_ref: crate::svg_art::Art::new("shelf_reference", include_str!("../assets/panels/shelf_reference.svg")),
+            files, open: None, topic: 0, back: vec![], textures: HashMap::new() }
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui) {
@@ -38,37 +42,35 @@ impl Books {
             ui.label("No help files found (expected the original 'help' folder next to 'data').");
             return;
         }
-        // The manuals stand on shelves, twelve to a shelf; click one to open it.
-        const PER_SHELF: usize = 12;
-        const COLOURS: [Color32; 6] = [
-            Color32::from_rgb(28, 70, 40),
-            Color32::from_rgb(30, 60, 140),
-            Color32::from_rgb(214, 110, 40),
-            Color32::from_rgb(40, 120, 80),
-            Color32::from_rgb(25, 40, 100),
-            Color32::from_rgb(120, 30, 30),
-        ];
+        // The reference books stand on one shelf as on the original's; the equipment manuals on the
+        // shelves below, twelve to a shelf. Click one to open it.
+        let find = |name: &str| self.files.iter().position(|(n, _)| n.eq_ignore_ascii_case(name));
+        let opened = self.open.as_ref().map(|o| o.0);
         let mut clicked = None;
-        for (row, chunk) in self.files.chunks(PER_SHELF).enumerate() {
+        {
+            let p = Plate::with_art(ui, "Books", &mut self.shelf_ref, 760.0);
+            for (k, file) in REFERENCE.iter().enumerate() {
+                let Some(i) = find(file) else { continue };
+                let (clicked_now, r) = p.spot(ui, &format!("book-{k}"), self.shelf_ref.rect(&format!("book-{k}")));
+                if opened == Some(i) {
+                    ui.painter().rect_stroke(r.rect, 2.0, egui::Stroke::new(2.5, crate::panel::YELLOW), egui::StrokeKind::Outside);
+                }
+                if clicked_now {
+                    clicked = Some(i);
+                }
+            }
+        }
+        let manuals: Vec<usize> = (0..self.files.len()).filter(|&i| !REFERENCE.iter().any(|b| self.files[i].0.eq_ignore_ascii_case(b))).collect();
+        for chunk in manuals.chunks(PER_SHELF) {
             let p = Plate::with_art(ui, "Books", &mut self.shelf, 760.0);
             let space = p.place(self.shelf.rect("space"));
             let w = space.width() / PER_SHELF as f32;
-            for (k, (name, _)) in chunk.iter().enumerate() {
-                let i = row * PER_SHELF + k;
-                let open = self.open.as_ref().is_some_and(|o| o.0 == i);
+            for (k, &i) in chunk.iter().enumerate() {
                 let h = space.height() * (0.82 + 0.06 * ((i * 7) % 4) as f32 / 3.0);
-                let spine = egui::Rect::from_min_size(egui::pos2(space.left() + w * k as f32 + 1.0, space.bottom() - h - if open { 6.0 } else { 0.0 }), egui::vec2(w - 2.0, h));
-                let c = COLOURS[i % COLOURS.len()];
-                let painter = ui.painter();
-                painter.rect_filled(spine, 2.0, c);
-                painter.rect_filled(spine.shrink2(egui::vec2(0.0, 6.0)).with_max_x(spine.left() + 3.0), 0.0, Color32::from_white_alpha(25));
-                for y in [spine.top() + 8.0, spine.bottom() - 10.0] {
-                    painter.hline(spine.x_range(), y, egui::Stroke::new(1.5, Color32::from_rgb(210, 180, 60)));
-                }
-                let galley = painter.layout_no_wrap(name.clone(), egui::FontId::proportional((w * 0.42).min(15.0)), Color32::from_rgb(235, 220, 160));
-                let pos = egui::pos2(spine.center().x - galley.size().y / 2.0, spine.center().y + galley.size().x / 2.0);
-                painter.add(egui::epaint::TextShape::new(pos, galley, Color32::WHITE).with_angle(-std::f32::consts::FRAC_PI_2));
-                if p.spot(ui, name, spine.translate(-p.rect.min.to_vec2()) / (p.rect.width() / 613.0)).0 {
+                let lift = if opened == Some(i) { 6.0 } else { 0.0 };
+                let r = egui::Rect::from_min_size(egui::pos2(space.left() + w * k as f32 + 1.0, space.bottom() - h - lift), egui::vec2(w - 2.0, h));
+                manual(ui.painter(), r, MANUAL_COLOURS[i % MANUAL_COLOURS.len()], &self.files[i].0);
+                if p.spot(ui, &self.files[i].0, r.translate(-p.rect.min.to_vec2()) / (p.rect.width() / 613.0)).0 {
                     clicked = Some(i);
                 }
             }
@@ -141,6 +143,30 @@ impl Books {
 }
 
 const PAPER: Color32 = Color32::from_rgb(245, 243, 230);
+const PER_SHELF: usize = 12;
+const MANUAL_COLOURS: [Color32; 6] = [
+    Color32::from_rgb(28, 70, 40),
+    Color32::from_rgb(30, 60, 140),
+    Color32::from_rgb(214, 110, 40),
+    Color32::from_rgb(40, 120, 80),
+    Color32::from_rgb(25, 40, 100),
+    Color32::from_rgb(120, 30, 30),
+];
+
+/// An equipment manual on a lower shelf: a plain spine with gold rules and its name.
+fn manual(painter: &egui::Painter, r: egui::Rect, c: Color32, name: &str) {
+    painter.rect_filled(r, 2.0, c);
+    painter.rect_filled(r.shrink2(egui::vec2(0.0, 6.0)).with_max_x(r.left() + 3.0), 0.0, Color32::from_white_alpha(25));
+    for y in [r.top() + 8.0, r.bottom() - 10.0] {
+        painter.hline(r.x_range(), y, egui::Stroke::new(1.5, Color32::from_rgb(210, 180, 60)));
+    }
+    let galley = painter.layout_no_wrap(name.to_string(), egui::FontId::proportional((r.width() * 0.42).min(15.0)), Color32::from_rgb(235, 220, 160));
+    let pos = egui::pos2(r.center().x - galley.size().y / 2.0, r.center().y + galley.size().x / 2.0);
+    painter.add(egui::epaint::TextShape::new(pos, galley, Color32::WHITE).with_angle(-std::f32::consts::FRAC_PI_2));
+}
+
+/// The help file of each book on the reference shelf (`book-0` .. `book-7` in its artwork).
+const REFERENCE: [&str; 8] = ["GMDSS", "COAST_RS", "CALLSIGN", "SERVICE", "SHIPS", "SHIPS", "COAST", "TUTOR"];
 
 /// One help topic as the original lays it out: a character grid (tabs every 8 columns) with the
 /// links in it and the pictures drawn over it, one picture pixel to an eighth of a character.

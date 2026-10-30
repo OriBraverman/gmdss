@@ -5,18 +5,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="317" height="133" viewBox="0 0 317 133" font-family="DejaVu Sans">
   <defs>
     <linearGradient id="face" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff04a"/>
-      <stop offset="1" stop-color="#f2d800"/>
+      <stop offset="0" stop-color="#ffec10"/>
+      <stop offset="1" stop-color="#f6e000"/>
     </linearGradient>
     <linearGradient id="key" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#9a9a9a"/>
       <stop offset="1" stop-color="#5e5e5e"/>
     </linearGradient>
+    <pattern id="grain" width="2" height="2" patternUnits="userSpaceOnUse">
+      <rect width="2" height="2" fill="#7a7240"/>
+      <rect width="1" height="1" fill="#d6c860"/>
+      <rect x="1" y="1" width="1" height="1" fill="#c4b650"/>
+    </pattern>
     <g id="oval">
       <rect x="0.8" y="1.4" width="23" height="13" rx="6.5" fill="#000" fill-opacity="0.35"/>
       <rect x="0" y="0" width="23" height="13" rx="6.5" fill="#000"/>
-      <rect x="1.5" y="1.5" width="20" height="10" rx="5" fill="url(#key)"/>
-      <rect x="4" y="2.5" width="15" height="3" rx="1.5" fill="#fff" fill-opacity="0.25"/>
+      <rect x="1.5" y="1.5" width="20" height="10" rx="5" fill="url(#grain)"/>
+      <rect x="1.5" y="1.5" width="20" height="10" rx="5" fill="url(#key)" fill-opacity="0.25"/>
     </g>
     <g id="led"><circle r="4.5" fill="#000"/><circle r="3.5" fill="#3a3a10"/></g>
   </defs>
@@ -26,21 +31,22 @@
   <!-- "Press both keys" bracket. -->
   <rect x="134.5" y="11.5" width="74" height="40" rx="4" fill="none" stroke="#e3e3e3" stroke-width="2"/>
   <path d="M108,61 V33 Q108,31 110,31 H134 M209,31 H232 Q234,31 234,33 V61" fill="none" stroke="#e3e3e3" stroke-width="2"/>
-  <g font-size="6.6" fill="#e3e3e3" text-anchor="middle">
-    <text x="171.5" y="22">Press both keys</text>
-    <text x="171.5" y="33.5">for 5 seconds</text>
-    <text x="171.5" y="45">to send alarm.</text>
+  <!-- The original's lettering is a tall narrow bitmap font: large size, squeezed to its widths. -->
+  <g font-size="10.5" fill="#e3e3e3" text-anchor="middle">
+    <text x="171" y="23.5" textLength="66" lengthAdjust="spacingAndGlyphs">Press both keys</text>
+    <text x="171" y="35.5" textLength="57" lengthAdjust="spacingAndGlyphs">for 5 seconds</text>
+    <text x="171" y="47" textLength="60" lengthAdjust="spacingAndGlyphs">to send alarm.</text>
   </g>
 
-  <g font-size="6.8" fill="#e3e3e3" text-anchor="middle">
-    <text x="38.5" y="71">On/Off</text>
-    <text x="73.5" y="71">Power</text>
-    <text x="108.5" y="71">Set</text>
-    <text x="143.5" y="71">Login</text>
-    <text x="171.5" y="71">Send</text>
-    <text x="199.5" y="71">Mail</text>
-    <text x="234.5" y="71">Alarm</text>
-    <text x="269.5" y="71">Alarm</text>
+  <g font-size="11" fill="#e3e3e3" text-anchor="middle">
+    <text x="38" y="72" textLength="28" lengthAdjust="spacingAndGlyphs">On/Off</text>
+    <text x="73" y="72" textLength="27" lengthAdjust="spacingAndGlyphs">Power</text>
+    <text x="107.5" y="72" textLength="14" lengthAdjust="spacingAndGlyphs">Set</text>
+    <text x="142.5" y="72" textLength="23" lengthAdjust="spacingAndGlyphs">Login</text>
+    <text x="170.5" y="72" textLength="20.5" lengthAdjust="spacingAndGlyphs">Send</text>
+    <text x="198.5" y="72" textLength="18.5" lengthAdjust="spacingAndGlyphs">Mail</text>
+    <text x="233" y="72" textLength="24.5" lengthAdjust="spacingAndGlyphs">Alarm</text>
+    <text x="268.5" y="72" textLength="24.5" lengthAdjust="spacingAndGlyphs">Alarm</text>
   </g>
   <use id="key-ON_OFF" href="#oval" x="27" y="77"/>
   <use id="key-SET" href="#oval" x="97" y="77"/>
@@ -51,5 +57,5 @@
   <use id="lamp-MAIL" href="#led" x="199.5" y="83.5"/>
   <use id="lamp-ALARM" href="#led" x="269.5" y="83.5"/>
 
-  <text x="5" y="127" font-size="7.5" fill="#e3e3e3">H2095B  Inmarsat-C transceiver</text>
+  <text x="5" y="128" font-size="11" fill="#e3e3e3" textLength="131" lengthAdjust="spacingAndGlyphs">H2095B  Inmarsat-C Transceiver</text>
 </svg>

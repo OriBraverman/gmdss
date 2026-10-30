@@ -348,13 +348,13 @@ impl Units {
         let p = Plate::with_art(ui, "Charger", &mut self.charger_art, 700.0);
         let art = &self.charger_art;
         let painter = ui.painter().clone();
-        // Needles: pivot 20 units below the face's bottom centre, length 68, -50..+50 degrees (as in the art).
+        // Needles: pivot 147.6 units below the face's bottom centre, -23.2..+23.2 degrees (as in the art).
         for (id, value, lo, hi) in [("face-A", self.charger.battery_a() as f32, -80.0, 80.0), ("face-V", self.charger.voltage() as f32, 0.0, 30.0)] {
             let face = p.place(art.rect(id));
             let s = face.width() / 164.0;
-            let pivot = face.center_bottom() + Vec2::new(0.0, 20.0 * s);
-            let a = (-50.0 + 100.0 * (value.clamp(lo, hi) - lo) / (hi - lo)).to_radians();
-            let tip = pivot + Vec2::new(a.sin(), -a.cos()) * 66.0 * s;
+            let pivot = face.center_bottom() + Vec2::new(0.0, 147.6 * s);
+            let a = (-23.2 + 46.4 * (value.clamp(lo, hi) - lo) / (hi - lo)).to_radians();
+            let tip = pivot + Vec2::new(a.sin(), -a.cos()) * 200.0 * s;
             painter.with_clip_rect(face).line_segment([pivot, tip], Stroke::new(1.6 * s, RED));
         }
         p.lamp_glow(ui, art.rect("lamp-ON"), self.charger.mains && self.charger.switch != Switch::Off, RED, "Charging");
