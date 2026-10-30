@@ -34,6 +34,13 @@ More lessons in the same script language (one `*.txt` per lesson, optional index
 the `lessons/index.txt` format) are added with `--lessons <folder>`, for example your own copies of
 the original program's lessons as plain text; they are listed under their index groups.
 
+Some original books are in Russian. `cargo run --example help_export -- <help folder> <out>`
+writes their Russian pages as text (links `[[page|text]]`, pictures `{{n}}`); put translations
+of those files in a `help_en` folder next to `help`, and the Books show them in English, with an
+English / Russian switch.
+
+Examinees' exam tables are kept in `examinees/` (one text file each) in the working folder.
+
 ## Layout
 
 | Path | What |

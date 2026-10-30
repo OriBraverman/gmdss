@@ -2,7 +2,8 @@
 //!
 //! ```text
 //! header text, ^Z, u8, u16 n
-//! n x {u32 offset, u8 kind}       topics; kind & 3: 1 text with links, 2 plain text, 3 picture page
+//! n x {u32 offset, u8 kind}       topics; kind & 3: 1 text with links, 2 plain text, 3 picture page;
+//!                                 0x80 listed in the contents, 0x20 the root page
 //! u16 p, p x u32 offset           pictures
 //! u16 len, len bytes              topic names, NUL terminated, one per topic ("" = none)
 //! topic kind 1: u16 len, u16 next, u16 prev, u8 links, u8 pictures, u16, u8 title length, text,
@@ -58,16 +59,36 @@ pub struct Topic {
     pub links: Vec<Link>,
     /// (text position, picture index).
     pub pictures: Vec<(usize, usize)>,
+    /// The pages the Next and Prev buttons go to.
+    pub next: Option<usize>,
+    pub prev: Option<usize>,
+    /// Listed in the table of contents.
+    pub listed: bool,
 }
 
 pub struct HelpFile {
     pub topics: Vec<Topic>,
     pub pictures: Vec<Picture>,
+    /// The page the Root button goes to.
+    pub root: Option<usize>,
 }
 
 impl HelpFile {
     pub fn named(&self, name: &str) -> Option<usize> {
         self.topics.iter().position(|t| t.name.eq_ignore_ascii_case(name))
+    }
+
+    /// The table of contents, as the original builds it: a page with a link to every listed topic.
+    pub fn contents(&self) -> Topic {
+        let mut text = "\t\tTable of Contents\n\n".to_string();
+        let mut links = vec![];
+        for (i, t) in self.topics.iter().enumerate().filter(|(_, t)| t.listed) {
+            let start = text.chars().count();
+            text += &t.title;
+            links.push(Link { start, len: t.title.chars().count(), target: i });
+            text += "\n";
+        }
+        Topic { name: String::new(), title: "Table of Contents".into(), text, links, pictures: vec![], next: None, prev: None, listed: false }
     }
 
     /// The topics that have Russian text, in the translation format: `@@ n` (topic number) on a
@@ -226,7 +247,8 @@ fn topic(b: &[u8], at: usize, kind: u8, name: String) -> Option<Topic> {
     let links = (0..links).map(|i| end + 7 * i).map(|r| Link { start: at(r), len: usize::from(t[r + 6]), target: word(r + 4) }).collect();
     let title = text.chars().take(title_len).collect::<String>().trim().to_string();
     let title = if title.is_empty() { text.lines().map(str::trim).find(|l| l.chars().count() > 2).unwrap_or(&name).to_string() } else { title };
-    Some(Topic { name, title, text, links, pictures })
+    let page = |i: usize| (kind & 3 == 1).then(|| word(i)).filter(|&p| p != 0xffff);
+    Some(Topic { name, title, text, links, pictures, next: page(2), prev: page(4), listed: kind & 0x80 != 0 })
 }
 
 /// The topics (in file order, which links refer to) and pictures of a help file.
@@ -247,10 +269,11 @@ pub fn parse(b: &[u8]) -> Option<HelpFile> {
         .iter()
         .map(|&(o, kind)| {
             let name = names.next().unwrap_or_default();
-            topic(b, o, kind, name.clone()).unwrap_or(Topic { title: name.clone(), name, text: String::new(), links: vec![], pictures: vec![] })
+            topic(b, o, kind, name.clone()).unwrap_or(Topic { title: name.clone(), name, text: String::new(), links: vec![], pictures: vec![], next: None, prev: None, listed: false })
         })
         .collect();
-    Some(HelpFile { topics, pictures })
+    let root = table.iter().position(|&(_, kind)| kind & 0x20 != 0);
+    Some(HelpFile { topics, pictures, root })
 }
 
 #[cfg(test)]
@@ -260,10 +283,11 @@ mod tests {
     /// Russian topics out in the translation format, a translation back in with its links.
     #[test]
     fn translation() {
-        let t = |text: &str, links, pictures| Topic { name: String::new(), title: String::new(), text: text.into(), links, pictures };
+        let t = |text: &str, links, pictures| Topic { name: String::new(), title: String::new(), text: text.into(), links, pictures, next: None, prev: None, listed: true };
         let mut h = HelpFile {
             topics: vec![t("English\n", vec![], vec![]), t("Смотри рисунок\nДалее", vec![Link { start: 15, len: 5, target: 0 }], vec![(6, 3)])],
             pictures: vec![],
+            root: None,
         };
         let ru = h.russian();
         assert_eq!(ru, "@@ 1\nСмотри{{3}} рисунок\n[[0|Далее]]\n");
@@ -272,6 +296,9 @@ mod tests {
         let s = &h.topics[1];
         assert_eq!((s.text.as_str(), s.title.as_str()), ("See the picture\r\nNext", "See the picture"));
         assert_eq!((s.links[0].start, s.links[0].len, s.pictures[0]), (17, 4, (3, 3)));
+        let c = h.contents();
+        assert_eq!(c.text, "\t\tTable of Contents\n\n\nSee the picture\n");
+        assert_eq!((c.links[1].start, c.links[1].len, c.links[1].target), (22, 15, 1));
     }
 
     #[test]

@@ -19,6 +19,12 @@ pub struct Books {
     reading: bool,
     /// The open book's pictures, as they are drawn.
     textures: HashMap<usize, egui::TextureHandle>,
+    /// Russian pages in English, where a translation is present (the default).
+    pub english: bool,
+    /// The open book has a translation (`help_en/<BOOK>.txt` beside `help`).
+    translated: bool,
+    /// The open book's table of contents page.
+    contents: Option<usize>,
 }
 
 impl Books {
@@ -37,7 +43,7 @@ impl Books {
         Books {
             chart_request: false,
             shelf_ref: crate::svg_art::Art::new("shelf_reference", include_str!("../assets/panels/shelf_reference.svg")),
-            files, open: None, reading: false, topic: 0, back: vec![], textures: HashMap::new() }
+            files, open: None, reading: false, topic: 0, back: vec![], textures: HashMap::new(), english: true, translated: false, contents: None }
     }
 
     pub fn show(&mut self, ui: &mut egui::Ui) {
@@ -95,56 +101,67 @@ impl Books {
         if self.open.as_ref().is_none_or(|o| o.0 != i) {
             self.load(i);
         }
-        self.topic = 0;
+        self.topic = self.open.as_ref().and_then(|o| o.1.root).or(self.contents).unwrap_or(0);
         self.reading = true;
         true
     }
 
     /// An open book: its topics on the left, the page on the right, the whole height of the page.
+    /// An open book, as the original's help window: the page, with Next, Prev, Back, Root and
+    /// Contents (the table of contents page) above it.
     fn reader(&mut self, ui: &mut egui::Ui) {
         let Some((i, h)) = &self.open else { return };
         let mut go = None;
         let mut close = false;
+        let mut relanguage = None;
+        let here = h.topics.get(self.topic);
         ui.horizontal(|ui| {
             if ui.button("\u{25c0} Shelf").clicked() {
                 close = true;
             }
             ui.label(RichText::new(title_of(&self.files[*i].0)).size(17.0).strong().color(Color32::from_rgb(235, 220, 160)));
             ui.add_space(16.0);
+            for (label, to) in [("Next", here.and_then(|t| t.next)), ("Prev", here.and_then(|t| t.prev))] {
+                if ui.add_enabled(to.is_some(), egui::Button::new(label)).clicked() {
+                    go = to;
+                }
+            }
             if ui.add_enabled(!self.back.is_empty(), egui::Button::new("Back")).clicked() {
                 self.topic = self.back.pop().unwrap();
             }
-            if ui.button("Contents").clicked() {
-                go = Some(0);
+            for (label, to) in [("Root", h.root), ("Contents", self.contents)] {
+                if ui.add_enabled(to.is_some(), egui::Button::new(label)).clicked() {
+                    go = to;
+                }
+            }
+            if self.translated {
+                ui.add_space(16.0);
+                for (english, label) in [(true, "English"), (false, "\u{420}\u{443}\u{441}\u{441}\u{43a}\u{438}\u{439}")] {
+                    if ui.selectable_label(self.english == english, label).clicked() && self.english != english {
+                        relanguage = Some(english);
+                    }
+                }
             }
         });
         ui.add_space(6.0);
         let height = (ui.available_height() - 8.0).max(200.0);
-        ui.horizontal_top(|ui| {
-            ui.vertical(|ui| {
-                ui.set_width(250.0);
-                ui.label(RichText::new("TOPICS").small().color(Color32::GRAY));
-                egui::ScrollArea::vertical().id_salt("topics").max_height(height - 20.0).auto_shrink([false, false]).show(ui, |ui| {
-                    for (k, t) in h.topics.iter().enumerate() {
-                        let title: String = t.title.chars().take(36).collect();
-                        if ui.selectable_label(self.topic == k, title).clicked() {
-                            go = Some(k);
-                        }
+        if let Some(t) = h.topics.get(self.topic) {
+            egui::Frame::new().fill(PAPER).inner_margin(12).corner_radius(3).show(ui, |ui| {
+                egui::ScrollArea::both().id_salt(("text", self.topic)).max_height(height - 24.0).auto_shrink([false, false]).show(ui, |ui| {
+                    if let Some(l) = page(ui, h, t, &mut self.textures) {
+                        go = Some(l);
                     }
                 });
             });
-            if let Some(t) = h.topics.get(self.topic) {
-                egui::Frame::new().fill(PAPER).inner_margin(12).corner_radius(3).show(ui, |ui| {
-                    egui::ScrollArea::both().id_salt(("text", self.topic)).max_height(height - 24.0).auto_shrink([false, false]).show(ui, |ui| {
-                        if let Some(l) = page(ui, h, t, &mut self.textures) {
-                            go = Some(l);
-                        }
-                    });
-                });
-            }
-        });
+        }
         if close {
             self.reading = false;
+        }
+        if let Some(english) = relanguage {
+            let (i, topic, back) = (self.open.as_ref().unwrap().0, self.topic, std::mem::take(&mut self.back));
+            self.english = english;
+            self.load(i);
+            (self.topic, self.back) = (topic, back);
         }
         if let Some(k) = go.filter(|&k| k != self.topic) {
             self.back.push(self.topic);
@@ -153,9 +170,23 @@ impl Books {
     }
 
     fn load(&mut self, i: usize) {
-        let h = std::fs::read(&self.files[i].1).ok().and_then(|b| help::parse(&b)).unwrap_or(HelpFile { topics: vec![], pictures: vec![] });
+        let mut h = std::fs::read(&self.files[i].1).ok().and_then(|b| help::parse(&b)).unwrap_or(HelpFile { topics: vec![], pictures: vec![], root: None });
+        let translation = self.files[i].1.parent().and_then(|d| d.parent()).map(|d| d.join("help_en").join(format!("{}.txt", self.files[i].0.to_ascii_uppercase())));
+        let translation = translation.and_then(|p| std::fs::read_to_string(p).ok());
+        self.translated = translation.is_some();
+        if let Some(t) = translation.filter(|_| self.english) {
+            h.translate(&t);
+        }
+        // The table of contents, when the book lists topics, is the last page.
+        if h.topics.iter().any(|t| t.listed) {
+            let contents = h.contents();
+            h.topics.push(contents);
+            self.contents = Some(h.topics.len() - 1);
+        } else {
+            self.contents = None;
+        }
         self.open = Some((i, h));
-        self.topic = 0;
+        self.topic = self.open.as_ref().and_then(|o| o.1.root).or(self.contents).unwrap_or(0);
         self.back.clear();
         self.textures.clear();
     }
@@ -299,5 +330,13 @@ mod tests {
             }
             crate::snapshot::render(name, eframe::egui::vec2(940.0, 620.0), |ui| books.show(ui));
         }
+        // A Russian book, in English where the translation (help_en) is present.
+        let mut books = super::Books::new(Some(dir.clone()));
+        books.open_file("tutor.hlp");
+        crate::snapshot::render("books_tutor", eframe::egui::vec2(940.0, 620.0), |ui| books.show(ui));
+        // The table of contents of a book.
+        let mut books = super::Books::new(Some(dir.clone()));
+        books.open_file("hf_dsc.hlp");
+        crate::snapshot::render("books_contents", eframe::egui::vec2(940.0, 620.0), |ui| books.show(ui));
     }
 }
